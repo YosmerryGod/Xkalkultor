@@ -3,6 +3,22 @@ import './globals.css';
 export const metadata = {
   title: 'Exkalt — Kalkulator Harga Jual',
   description: 'Kalkulator harga jual ShopeeFood, GrabFood, dan GoFood',
+  applicationName: 'Exkalt',
+  manifest: '/manifest.webmanifest',
+  formatDetection: { telephone: false },
+  icons: {
+    icon: [
+      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'Exkalt',
+    statusBarStyle: 'default',
+  },
+  other: { 'mobile-web-app-capable': 'yes' },
 };
 
 export const viewport = {

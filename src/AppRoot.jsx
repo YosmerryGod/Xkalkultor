@@ -1,4 +1,5 @@
 import './viewport';
+import PwaRegister from './PwaRegister';
 import { AppProvider, useApp } from './context/AppContext';
 import AuthView from './features/auth/AuthView';
 import DashboardView from './features/dashboard/DashboardView';
@@ -17,6 +18,7 @@ const Shell = () => {
 
 const AppRoot = () => (
   <AppProvider>
+    <PwaRegister />
     <Shell />
   </AppProvider>
 );
