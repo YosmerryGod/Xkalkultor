@@ -11,6 +11,7 @@ const BottomNav = () => {
             {[
               { id: 'beranda', icon: <Icons.Home size={18} />, label: 'Beranda' },
               { id: 'kalkulator', icon: <Icons.Calculator size={18} />, label: 'Kalkulator' },
+              { id: 'menu', icon: <Icons.Package size={18} />, label: 'Menu' },
               { id: 'riwayat', icon: <Icons.Clock size={18} />, label: 'Riwayat' }
             ].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex flex-col items-center justify-center flex-1 h-11 rounded-xl transition-all duration-300 ${activeTab === tab.id ? `${theme.bgContainer} ${theme.shadowOut} text-[#df6a49]` : `${theme.textSecondary} hover:text-[#df6a49]/70`}`}>

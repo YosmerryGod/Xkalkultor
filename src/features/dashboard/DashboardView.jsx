@@ -4,6 +4,7 @@ import BottomNav from '../../components/layout/BottomNav';
 import Toast from '../../components/ui/Toast';
 import HomeView from '../home/HomeView';
 import CalculatorView from '../calculator/CalculatorView';
+import MenuView from '../menu/MenuView';
 import HistoryView from '../history/HistoryView';
 import HistorySearchModal from '../history/HistorySearchModal';
 
@@ -18,6 +19,7 @@ const DashboardView = () => {
       <div className="flex-1 overflow-y-auto px-6 py-4 pb-24 relative z-10 custom-scrollbar">
         {activeTab === 'beranda' && <HomeView />}
         {activeTab === 'kalkulator' && <CalculatorView />}
+        {activeTab === 'menu' && <MenuView />}
         {activeTab === 'riwayat' && <HistoryView />}
       </div>
 

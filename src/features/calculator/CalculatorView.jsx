@@ -5,13 +5,23 @@ import SettingsSheet from './SettingsSheet';
 const CalculatorView = () => {
   const {
     calcData, calcResult, setShowSettings, calcSettings, theme,
-    handleCalcChange, handleCalculate,
+    handleCalcChange, handleCalculate, sortedMenus, selectMenuItem,
   } = useApp();
+  const selectedMenuId = sortedMenus.some((m) => String(m.id) === String(calcData.menuId)) ? String(calcData.menuId) : '';
   return (
     <div className="flex flex-col h-full relative">
-        <div className="mb-4 px-1">
-            <h2 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${theme.textPrimary}`}>Kalkulator</h2>
-            <p className={`text-xs mt-0.5 font-medium ${theme.textSecondary}`}>Hitung harga jual sesuai target Net.</p>
+        <div className="mb-4 px-1 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+                <h2 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${theme.textPrimary}`}>Kalkulator</h2>
+                <p className={`text-xs mt-0.5 font-medium ${theme.textSecondary}`}>Hitung harga jual sesuai target Net.</p>
+            </div>
+            <div className="relative flex-shrink-0 w-36">
+                <select aria-label="Pilih menu tersimpan" value={selectedMenuId} disabled={sortedMenus.length === 0} onChange={(e) => selectMenuItem(e.target.value)} className={`w-full h-9 pl-3 pr-7 rounded-xl appearance-none ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none text-[11px] font-bold cursor-pointer truncate disabled:opacity-60`}>
+                    <option value="">{sortedMenus.length ? 'Pilih menu' : 'Belum ada menu'}</option>
+                    {sortedMenus.map((m) => (<option key={m.id} value={m.id}>{m.name}</option>))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400"><Icons.ChevronRight size={12} className="rotate-90" /></div>
+            </div>
         </div>
 
         <div className="space-y-4 px-1">

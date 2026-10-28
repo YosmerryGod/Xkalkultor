@@ -44,6 +44,10 @@ export const AppProvider = ({ children }) => {
   const [sortOrder, setSortOrder] = useState('newest');
   const [merchantFilter, setMerchantFilter] = useState('all'); 
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [coretFilter, setCoretFilter] = useState('all'); // 'all' | 'coret' | 'nocoret'
+
+  // Daftar menu tersimpan (nama + harga net), per akun
+  const [menuItems, setMenuItems] = useState(() => getInitialUserData()?.menuItems || []);
 
   // Add Promo States (Single & Multi Package)
   const [isAddingPromo, setIsAddingPromo] = useState(false);
@@ -62,8 +66,8 @@ export const AppProvider = ({ children }) => {
   useEffect(() => { LS.set(KEYS.banners, banners); }, [banners]);
   useEffect(() => { LS.set(KEYS.homePromos, homePromos); }, [homePromos]);
   useEffect(() => {
-    if (userProfile) saveUserData(userProfile.id, { calcSettings, historyLog });
-  }, [calcSettings, historyLog, userProfile]);
+    if (userProfile) saveUserData(userProfile.id, { calcSettings, historyLog, menuItems });
+  }, [calcSettings, historyLog, menuItems, userProfile]);
 
   const [showAddHomeModal, setShowAddHomeModal] = useState(false);
   const [homeAddType, setHomeAddType] = useState('promo');
@@ -78,8 +82,39 @@ export const AppProvider = ({ children }) => {
 
   // ---- Kalkulator & promo
   const handleCalcChange = (e) => {
-    setCalcData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    // Mengetik manual nama/harga berarti tidak lagi memakai menu tersimpan
+    setCalcData(prev => ({ ...prev, [name]: value, ...(name === 'name' || name === 'hargaNet' ? { menuId: '' } : {}) }));
     if (calcResult) setCalcResult(null); 
+  };
+
+  // ---- Menu tersimpan
+  const sortedMenus = [...(menuItems || [])].sort((a, b) => String(a.name).localeCompare(String(b.name), 'id'));
+
+  const saveMenuItem = ({ id, name, hargaNet }) => {
+    const n = String(name || '').trim();
+    const price = parseNum(hargaNet, 0);
+    if (!n) { showToast('Isi nama menu.', 'error'); return false; }
+    if (price <= 0) { showToast('Isi harga net lebih dari 0.', 'error'); return false; }
+    setMenuItems((prev) => (id
+      ? (prev || []).map((m) => (m.id === id ? { ...m, name: n, hargaNet: price } : m))
+      : [...(prev || []), { id: Date.now(), name: n, hargaNet: price }]));
+    showToast(id ? 'Menu diperbarui.' : 'Menu ditambahkan.', 'success');
+    return true;
+  };
+
+  const deleteMenuItem = (id) => {
+    setMenuItems((prev) => (prev || []).filter((m) => m.id !== id));
+    setCalcData((prev) => (String(prev.menuId) === String(id) ? { ...prev, menuId: '' } : prev));
+  };
+
+  // Pilih menu -> nama & harga net kalkulator terisi otomatis
+  const selectMenuItem = (id, goToCalc = false) => {
+    const m = (menuItems || []).find((x) => String(x.id) === String(id));
+    if (!m) { setCalcData((prev) => ({ ...prev, menuId: '' })); return; }
+    setCalcData((prev) => ({ ...prev, name: m.name, hargaNet: String(m.hargaNet), menuId: m.id }));
+    setCalcResult(null);
+    if (goToCalc) setActiveTab('kalkulator');
   };
 
   const togglePromo = (promoId) => {
@@ -173,13 +208,13 @@ export const AppProvider = ({ children }) => {
     if (netPrice <= 0) return;
 
     const merchantId = calcData.merchant || 'shopeefood';
-    const { finalPricePerItem, breakdown, merchantName } = calculatePrice(netPrice, merchantId, calcSettings);
+    const { finalPricePerItem, breakdown, merchantName, hasCoret } = calculatePrice(netPrice, merchantId, calcSettings);
     setCalcResult({ finalPricePerItem, breakdown });
 
     const ts = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
     setHistoryLog(prev => [{
       id: Date.now(), name: calcData.name || 'Item Tanpa Nama', hargaNet: netPrice, finalPrice: finalPricePerItem,
-      merchant: merchantId, merchantName, timestamp: ts, rawInputs: { ...calcData }
+      merchant: merchantId, merchantName, hasCoret, timestamp: ts, rawInputs: { ...calcData }
     }, ...(prev || [])]);
   };
 
@@ -194,6 +229,9 @@ export const AppProvider = ({ children }) => {
   const getProcessedHistory = () => {
     let processed = [...(historyLog || [])];
     if (merchantFilter !== 'all') processed = processed.filter(item => item.merchant === merchantFilter);
+    // Riwayat lama belum mencatat diskon coret (hasCoret kosong): hanya tampil di "Semua"
+    if (coretFilter === 'coret') processed = processed.filter(item => item.hasCoret === true);
+    else if (coretFilter === 'nocoret') processed = processed.filter(item => item.hasCoret === false);
     if ((searchQuery || '').trim() !== '') {
       const q = searchQuery.toLowerCase();
       processed = processed.filter(item => String(item.name || '').toLowerCase().includes(q) || String(item.merchantName || '').toLowerCase().includes(q));
@@ -220,6 +258,7 @@ export const AppProvider = ({ children }) => {
     const data = loadUserData(user.id);
     setCalcSettings(data?.calcSettings || DEFAULT_SETTINGS);
     setHistoryLog(data?.historyLog || []);
+    setMenuItems(data?.menuItems || []);
     setCalcData({ name: '', hargaNet: '', merchant: 'shopeefood' });
     setCalcResult(null);
     setUserProfile(toProfile(user));
@@ -238,6 +277,7 @@ export const AppProvider = ({ children }) => {
     setUserProfile(null);
     setCalcSettings(DEFAULT_SETTINGS);
     setHistoryLog([]);
+    setMenuItems([]);
     setCalcData({ name: '', hargaNet: '', merchant: 'shopeefood' });
     setCalcResult(null);
     setIsLogin(true);
@@ -311,6 +351,7 @@ export const AppProvider = ({ children }) => {
     calcData, setCalcData, calcResult, setCalcResult, showSettings, setShowSettings,
     historyLog, setHistoryLog, searchQuery, setSearchQuery, showSearchModal, setShowSearchModal,
     sortOrder, setSortOrder, merchantFilter, setMerchantFilter, showFilterMenu, setShowFilterMenu,
+    coretFilter, setCoretFilter, menuItems, setMenuItems, sortedMenus, saveMenuItem, deleteMenuItem, selectMenuItem,
     isAddingPromo, setIsAddingPromo, promoMode, setPromoMode, subPromos, setSubPromos,
     promoForm, setPromoForm, calcSettings, setCalcSettings, banners, setBanners,
     homePromos, setHomePromos, showAddHomeModal, setShowAddHomeModal, homeAddType, setHomeAddType,

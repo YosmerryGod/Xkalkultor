@@ -150,6 +150,29 @@ describe('diskon coret', () => {
   });
 });
 
+describe('penanda diskon coret (hasCoret)', () => {
+  const run = (promos) => calculatePrice(10000, 'shopeefood', { ...settings, promos });
+
+  it('false tanpa diskon coret', () => {
+    expect(run([]).hasCoret).toBe(false);
+    expect(run([promo()]).hasCoret).toBe(false);
+  });
+
+  it('true bila diskon coret ikut dihitung', () => {
+    expect(run([promo({ category: 'fake' })]).hasCoret).toBe(true);
+  });
+
+  it('true bila item coret ada di dalam paket', () => {
+    const p = { id: 20, name: 'Paket', isPackage: true, enabled: true, subPromos: [promo({ category: 'fake' })] };
+    expect(run([p]).hasCoret).toBe(true);
+  });
+
+  it('false bila diskon coret dinonaktifkan atau tidak berlaku di marketplace itu', () => {
+    expect(run([promo({ category: 'fake', enabled: false })]).hasCoret).toBe(false);
+    expect(run([promo({ category: 'fake', merchant: 'gofood' })]).hasCoret).toBe(false);
+  });
+});
+
 describe('promo per marketplace', () => {
   const calc = (merchant, promos) =>
     calculatePrice(10000, merchant, { ...settings, promos }).finalPricePerItem;

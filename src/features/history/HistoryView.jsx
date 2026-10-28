@@ -6,8 +6,9 @@ const HistoryView = () => {
   const {
     historyLog, setHistoryLog, sortOrder, setSortOrder, merchantFilter,
     setMerchantFilter, showFilterMenu, setShowFilterMenu, calcSettings, theme,
-    handleEditHistory, processedHistory,
+    handleEditHistory, processedHistory, coretFilter, setCoretFilter,
   } = useApp();
+  const hasActiveFilter = coretFilter !== 'all' || (merchantFilter || 'all') !== 'all';
   return (
     <div className="flex flex-col h-full relative pb-4">
         <div className="mb-4 px-1 flex justify-between items-end relative z-30">
@@ -17,7 +18,7 @@ const HistoryView = () => {
 
             <div className="flex items-center gap-2">
                 <div className="relative">
-                    <button onClick={() => setShowFilterMenu(!showFilterMenu)} className={`h-8 px-2.5 rounded-lg flex items-center justify-center ${theme.bgContainer} ${theme.shadowOut} ${theme.textSecondary} hover:text-[#df6a49] transition-all ${showFilterMenu ? 'text-[#df6a49]' : ''}`}>
+                    <button onClick={() => setShowFilterMenu(!showFilterMenu)} className={`h-8 px-2.5 rounded-lg flex items-center justify-center ${theme.bgContainer} ${theme.shadowOut} ${theme.textSecondary} hover:text-[#df6a49] transition-all ${showFilterMenu || hasActiveFilter ? 'text-[#df6a49]' : ''}`}>
                         <Icons.ListFilter size={15} />
                     </button>
 
@@ -36,6 +37,14 @@ const HistoryView = () => {
                                     <option value="all">Semua Platform</option>
                                     {Object.entries(calcSettings?.marketplaces || {}).map(([key, data]) => (<option key={key} value={key}>{data?.name || key}</option>))}
                                 </select>
+                            </div>
+                            <div>
+                                <p className={`text-[9px] font-bold uppercase tracking-widest ${theme.textSecondary} mb-2`}>Diskon Coret</p>
+                                <div className="flex gap-1.5">
+                                    {[['all', 'Semua'], ['coret', 'Pakai'], ['nocoret', 'Tanpa']].map(([val, label]) => (
+                                        <button key={val} onClick={() => {setCoretFilter(val); setShowFilterMenu(false);}} className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg ${coretFilter === val ? 'bg-[#df6a49] text-white' : `${theme.bgContainer} ${theme.shadowIn} ${theme.textSecondary}`}`}>{label}</button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -60,7 +69,10 @@ const HistoryView = () => {
                     <div key={item.id} className={`p-4 rounded-3xl ${theme.bgContainer} ${theme.shadowOut} flex flex-col gap-3`}>
                         <div className="flex justify-between items-start">
                             <div className="flex flex-col gap-1">
-                                <span className={`self-start px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-md ${getBadgeStyle(item.merchant)}`}>{item.merchantName}</span>
+                                <div className="self-start flex items-center gap-1.5">
+                                    <span className={`px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-md ${getBadgeStyle(item.merchant)}`}>{item.merchantName}</span>
+                                    {item.hasCoret && <span className="px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-md bg-pink-500/10 text-pink-600">Diskon Coret</span>}
+                                </div>
                                 <h4 className={`text-base font-bold ${theme.textPrimary}`}>{item.name}</h4>
                                 <span className={`text-[9px] font-medium ${theme.textSecondary} flex items-center gap-1`}><Icons.Clock size={10}/> {item.timestamp}</span>
                             </div>

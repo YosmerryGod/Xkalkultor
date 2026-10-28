@@ -59,7 +59,7 @@ export const promoAppliesTo = (promo, merchantId) =>
  * @param {number} netPrice    harga net yang ingin diterima toko
  * @param {string} merchantId  kunci marketplace, mis. 'shopeefood'
  * @param {object} settings    { marketplaces, promos }
- * @returns {{ finalPricePerItem: number, breakdown: Array, merchantName: string }}
+ * @returns {{ finalPricePerItem: number, breakdown: Array, merchantName: string, hasCoret: boolean }}
  */
 export const calculatePrice = (netPrice, merchantId, settings) => {
   const mpSetting = settings?.marketplaces?.[merchantId] || { fee: 0, fixed: 0, name: 'Unknown' };
@@ -68,6 +68,7 @@ export const calculatePrice = (netPrice, merchantId, settings) => {
 
   const breakdown = [];
   let hargaSekarang = netPrice;
+  let hasCoret = false; // true bila ada diskon coret yang benar-benar menambah harga
 
   breakdown.push({ label: 'HARGA NET', value: netPrice, type: 'base' });
 
@@ -126,6 +127,7 @@ export const calculatePrice = (netPrice, merchantId, settings) => {
     if (stage.package) sub = `Terbesar dari ${stage.items.length} promo${coret ? ' • terakhir' : ''}`;
 
     hargaSekarang += best;
+    if (coret) hasCoret = true;
     breakdown.push({ label, sub, value: best, type: 'add' });
   };
 
@@ -136,5 +138,6 @@ export const calculatePrice = (netPrice, merchantId, settings) => {
     finalPricePerItem: Math.round(hargaSekarang),
     breakdown: breakdown.map((b) => ({ ...b, value: Math.round(b.value) })),
     merchantName: mpSetting.name || merchantId,
+    hasCoret,
   };
 };
