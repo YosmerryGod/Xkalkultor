@@ -203,20 +203,50 @@ export const AppProvider = ({ children }) => {
   };
 
 
-  const handleCalculate = () => {
-    const netPrice = parseNum(calcData.hargaNet, 0);
-    if (netPrice <= 0) return;
+  
+const handleCalculate = () => {
+  const netPrice = parseNum(calcData.hargaNet, 0);
+  if (netPrice <= 0) return;
 
-    const merchantId = calcData.merchant || 'shopeefood';
-    const { finalPricePerItem, breakdown, merchantName, hasCoret } = calculatePrice(netPrice, merchantId, calcSettings);
-    setCalcResult({ finalPricePerItem, breakdown });
+  const merchantId = calcData.merchant || 'shopeefood';
 
-    const ts = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
-    setHistoryLog(prev => [{
-      id: Date.now(), name: calcData.name || 'Item Tanpa Nama', hargaNet: netPrice, finalPrice: finalPricePerItem,
-      merchant: merchantId, merchantName, hasCoret, timestamp: ts, rawInputs: { ...calcData }
-    }, ...(prev || [])]);
-  };
+  // [MODIFIED] Ambil persentase promo coret yang terpilih.
+  const {
+    finalPricePerItem,
+    breakdown,
+    merchantName,
+    hasCoret,
+    coretDiscountPercent,
+  } = calculatePrice(netPrice, merchantId, calcSettings);
+
+  setCalcResult({ finalPricePerItem, breakdown });
+
+  const ts = new Date().toLocaleString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  setHistoryLog((prev) => [
+    {
+      id: Date.now(),
+      name: calcData.name || 'Item Tanpa Nama',
+      hargaNet: netPrice,
+      finalPrice: finalPricePerItem,
+      merchant: merchantId,
+      merchantName,
+      hasCoret,
+      // [ADDED] Simpan persentase untuk kartu Riwayat.
+      coretDiscountPercent,
+      timestamp: ts,
+      rawInputs: { ...calcData },
+    },
+    ...(prev || []),
+  ]);
+};
+
 
   // ---- Riwayat
   const handleEditHistory = (item) => {
