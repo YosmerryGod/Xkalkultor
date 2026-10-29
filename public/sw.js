@@ -1,6 +1,6 @@
 // Service worker Exkalt: membuat app bisa dibuka offline setelah pernah dimuat sekali.
 // Naikkan VERSION setiap kali ingin memaksa cache lama dibuang.
-const VERSION = 'exkalt-v2';
+const VERSION = 'exkalt-v3';
 const CACHE = `${VERSION}`;
 const PRECACHE = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'];
 
