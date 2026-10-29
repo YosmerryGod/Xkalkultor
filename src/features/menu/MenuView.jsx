@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Icons } from '../../components/icons/Icons';
 
@@ -7,8 +7,29 @@ const EMPTY_FORM = { id: null, name: '', hargaNet: '' };
 const MenuView = () => {
   const { theme, sortedMenus, saveMenuItem, deleteMenuItem, selectMenuItem } = useApp();
   const [form, setForm] = useState(null); // null = form tertutup
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const searchRef = useRef(null);
 
   const inputCls = `w-full h-12 px-3 rounded-2xl ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-xs font-semibold`;
+  const labelCls = `text-[10px] font-bold tracking-widest uppercase ml-1 ${theme.textSecondary}`;
+
+  const keyword = query.trim().toLowerCase();
+  const filteredMenus = useMemo(
+    () => (keyword ? sortedMenus.filter((m) => (m.name || '').toLowerCase().includes(keyword)) : sortedMenus),
+    [sortedMenus, keyword]
+  );
+
+  const openSearch = () => {
+    setSearchOpen(true);
+    // tunggu animasi mulai, lalu fokus ke input
+    setTimeout(() => searchRef.current?.focus(), 120);
+  };
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setQuery('');
+  };
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -20,30 +41,30 @@ const MenuView = () => {
   };
 
   return (
-    <div className="flex flex-col space-y-5">
-      <div className="flex justify-between items-end px-1 mt-2">
-        <div>
-          <h2 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${theme.textPrimary}`}>Menu</h2>
+    <div className="flex flex-col space-y-4">
+      {/* Header */}
+      <div className="flex justify-between items-end gap-3 px-1 mt-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${theme.textPrimary}`}>Menu</h2>
+            {sortedMenus.length > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${theme.bgContainer} ${theme.shadowIn} ${theme.textSecondary}`}>
+                {keyword ? `${filteredMenus.length}/${sortedMenus.length}` : sortedMenus.length}
+              </span>
+            )}
+          </div>
           <p className={`text-xs mt-0.5 font-medium ${theme.textSecondary}`}>
             Simpan harga net, lalu pilih dari dropdown di Kalkulator.
           </p>
         </div>
-        {!form && (
-          <button
-            type="button"
-            onClick={() => setForm(EMPTY_FORM)}
-            className={`h-9 px-4 rounded-full ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} flex items-center gap-2 text-xs font-bold text-[#df6a49] transition-all`}
-          >
-            <Icons.Plus size={14} /> Tambah
-          </button>
-        )}
       </div>
 
+      {/* Form tambah / edit */}
       {form && (
         <form onSubmit={onSubmit} className={`mx-1 p-4 rounded-3xl ${theme.bgContainer} ${theme.shadowOut} border border-[#df6a49]/20 space-y-3`}>
           <h5 className={`text-sm font-bold ${theme.textPrimary}`}>{form.id ? 'Edit Menu' : 'Menu Baru'}</h5>
           <label className="block space-y-1.5">
-            <span className={`text-[10px] font-bold tracking-widest uppercase ml-1 ${theme.textSecondary}`}>Nama Menu</span>
+            <span className={labelCls}>Nama Menu</span>
             <input
               type="text" autoFocus placeholder="Contoh: Nasi Goreng"
               value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -51,7 +72,7 @@ const MenuView = () => {
             />
           </label>
           <label className="block space-y-1.5">
-            <span className={`text-[10px] font-bold tracking-widest uppercase ml-1 ${theme.textSecondary}`}>Harga Net</span>
+            <span className={labelCls}>Harga Net</span>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none font-bold text-gray-400 text-xs">Rp</div>
               <input
@@ -78,39 +99,129 @@ const MenuView = () => {
         </form>
       )}
 
-      <div className="space-y-3 px-1 pb-4">
+      {/* Toolbar: Search + Tambah bersampingan. Search memanjang saat ditekan */}
+      {(sortedMenus.length > 0 || !form) && (
+        <div className="flex items-center justify-end gap-2 px-1">
+          {sortedMenus.length > 0 && (
+            <div
+              className={`relative h-10 min-w-0 basis-10 rounded-full overflow-hidden transition-[flex-grow,box-shadow] duration-300 ease-out ${theme.bgContainer} ${
+                searchOpen ? `grow ${theme.shadowIn}` : `grow-0 ${theme.shadowOut}`
+              }`}
+            >
+              <button
+                type="button"
+                onClick={searchOpen ? () => searchRef.current?.focus() : openSearch}
+                aria-label="Cari menu"
+                className={`absolute left-0 top-0 w-10 h-10 flex items-center justify-center transition-colors ${
+                  searchOpen ? theme.textSecondary : 'text-[#df6a49]'
+                }`}
+              >
+                <Icons.Search size={16} />
+              </button>
+
+              <input
+                ref={searchRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Escape' && closeSearch()}
+                onBlur={() => !query && setSearchOpen(false)}
+                placeholder="Cari nama menu..."
+                tabIndex={searchOpen ? 0 : -1}
+                aria-hidden={!searchOpen}
+                className={`absolute inset-0 w-full h-full pl-10 pr-10 bg-transparent focus:outline-none text-xs font-semibold transition-opacity duration-200 ${theme.textPrimary} ${
+                  searchOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'
+                }`}
+              />
+
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={closeSearch}
+                aria-label="Tutup pencarian"
+                tabIndex={searchOpen ? 0 : -1}
+                className={`absolute right-0 top-0 w-10 h-10 flex items-center justify-center transition-opacity duration-200 ${theme.textSecondary} ${
+                  searchOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                <Icons.X size={14} />
+              </button>
+            </div>
+          )}
+
+          {!form && (
+            <button
+              type="button"
+              onClick={() => setForm(EMPTY_FORM)}
+              className={`shrink-0 h-10 px-4 rounded-full ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} flex items-center gap-2 text-xs font-bold text-[#df6a49] transition-all`}
+            >
+              <Icons.Plus size={14} /> Tambah
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Grid daftar menu: 3 kolom (HP), 4 kolom (sm ke atas) */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 sm:gap-3 px-1 pb-4">
         {sortedMenus.length === 0 ? (
-          <div className={`py-8 rounded-3xl ${theme.bgContainer} ${theme.shadowIn} flex flex-col items-center justify-center text-center opacity-60 border border-dashed ${theme.border}`}>
-            <Icons.Package size={20} className={`mb-2 ${theme.textSecondary}`} />
-            <p className={`text-[10px] font-medium ${theme.textSecondary}`}>Belum ada menu. Tekan Tambah untuk membuat.</p>
+          <div className={`col-span-full py-10 rounded-3xl ${theme.bgContainer} ${theme.shadowIn} flex flex-col items-center justify-center text-center opacity-60 border border-dashed ${theme.border}`}>
+            <Icons.Package size={22} className={`mb-2 ${theme.textSecondary}`} />
+            <p className={`text-[11px] font-medium ${theme.textSecondary}`}>Belum ada menu. Tekan Tambah untuk membuat.</p>
+          </div>
+        ) : filteredMenus.length === 0 ? (
+          <div className={`col-span-full py-10 rounded-3xl ${theme.bgContainer} ${theme.shadowIn} flex flex-col items-center justify-center text-center opacity-60 border border-dashed ${theme.border}`}>
+            <Icons.Search size={22} className={`mb-2 ${theme.textSecondary}`} />
+            <p className={`text-[11px] font-medium px-4 ${theme.textSecondary}`}>Tidak ada menu yang cocok dengan &ldquo;{query.trim()}&rdquo;.</p>
           </div>
         ) : (
-          sortedMenus.map((menu) => (
-            <div key={menu.id} className={`p-4 rounded-3xl ${theme.bgContainer} ${theme.shadowOut} flex items-center justify-between gap-3`}>
-              <div className="min-w-0">
-                <h4 className={`text-sm font-bold truncate ${theme.textPrimary}`}>{menu.name}</h4>
-                <p className={`text-xs font-semibold mt-0.5 ${theme.textSecondary}`}>Net Rp {(menu.hargaNet || 0).toLocaleString('id-ID')}</p>
+          filteredMenus.map((menu) => (
+            <div
+              key={menu.id}
+              className={`flex flex-col min-w-0 p-2.5 rounded-2xl ${theme.bgContainer} ${theme.shadowOut}`}
+            >
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <div className="w-6 h-6 shrink-0 rounded-lg bg-[#df6a49]/10 text-[#df6a49] flex items-center justify-center text-[10px] font-extrabold uppercase">
+                    {(menu.name || '?').trim().charAt(0) || '?'}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button" onClick={() => setForm({ id: menu.id, name: menu.name, hargaNet: String(menu.hargaNet) })} aria-label={`Edit ${menu.name}`}
+                      className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all"
+                    >
+                      <Icons.Edit size={11} />
+                    </button>
+                    <button
+                      type="button" onClick={() => onDelete(menu)} aria-label={`Hapus ${menu.name}`}
+                      className="w-6 h-6 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500/20 active:scale-95 transition-all"
+                    >
+                      <Icons.Trash2 size={11} />
+                    </button>
+                  </div>
+                </div>
+                <h4
+                  title={menu.name}
+                  className={`mt-2 text-[11px] sm:text-xs font-bold leading-snug line-clamp-2 min-h-[2.25em] ${theme.textPrimary}`}
+                >
+                  {menu.name}
+                </h4>
+                <div className={`mt-2 px-2 py-1.5 rounded-xl ${theme.shadowIn} min-w-0`}>
+                  <p className={`text-[8px] font-bold tracking-widest uppercase leading-none ${theme.textSecondary} opacity-70`}>Harga Net</p>
+                  <p className={`mt-1 text-xs sm:text-[13px] font-extrabold tabular-nums leading-none truncate ${theme.textPrimary}`}>
+                    <span className={`text-[9px] font-bold mr-0.5 ${theme.textSecondary}`}>Rp</span>
+                    {(menu.hargaNet || 0).toLocaleString('id-ID')}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button" onClick={() => selectMenuItem(menu.id, true)} aria-label={`Hitung ${menu.name}`}
-                  className={`h-8 px-3 rounded-full ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} flex items-center gap-1.5 text-[10px] font-bold text-[#df6a49]`}
-                >
-                  <Icons.Calculator size={12} /> Hitung
-                </button>
-                <button
-                  type="button" onClick={() => setForm({ id: menu.id, name: menu.name, hargaNet: String(menu.hargaNet) })} aria-label="Edit menu"
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${theme.bgContainer} ${theme.shadowOut} text-blue-500`}
-                >
-                  <Icons.Edit size={12} />
-                </button>
-                <button
-                  type="button" onClick={() => onDelete(menu)} aria-label="Hapus menu"
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${theme.bgContainer} ${theme.shadowOut} text-red-500`}
-                >
-                  <Icons.Trash2 size={12} />
-                </button>
-              </div>
+
+              {/* Aksi utama (paling bawah) */}
+              <button
+                type="button" onClick={() => selectMenuItem(menu.id, true)} aria-label={`Hitung ${menu.name}`}
+                className={`mt-2.5 w-full h-8 rounded-xl ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} flex items-center justify-center gap-1.5 text-[10px] font-bold text-[#df6a49] transition-all`}
+              >
+                <Icons.Calculator size={12} /> Hitung
+              </button>
             </div>
           ))
         )}

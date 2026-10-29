@@ -1,5 +1,4 @@
-
-import { useState } from 'react'; // [ADDED]
+import { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Icons } from '../../components/icons/Icons';
 import SettingsSheet from './SettingsSheet';
@@ -19,6 +18,10 @@ const CalculatorView = () => {
 
   // [ADDED] Mengatur input mana yang sedang aktif.
   const [activeInput, setActiveInput] = useState(null);
+
+  // Rincian kalkulasi tertutup secara default; tutup lagi tiap hasil berubah.
+  const [showDetail, setShowDetail] = useState(false);
+  useEffect(() => { setShowDetail(false); }, [calcResult]);
 
   const selectedMenuId = sortedMenus.some(
     (menu) => String(menu.id) === String(calcData.menuId)
@@ -224,56 +227,80 @@ const CalculatorView = () => {
         {/* Hasil kalkulasi */}
         {calcResult ? (
           <div className={`mt-5 p-4 rounded-3xl ${theme.bgContainer} ${theme.shadowOut} flex flex-col`}>
-            <div className={`w-full space-y-2.5 p-3.5 rounded-2xl ${theme.bgContainer} ${theme.shadowIn} text-xs mb-4`}>
-              {(calcResult?.breakdown || []).map((item, idx) => (
-                <div
-                  key={idx}
-                  className={`flex justify-between items-start ${
-                    item.type === 'base'
-                      ? 'border-b border-gray-400/20 pb-2.5 mb-1'
-                      : ''
-                  }`}
-                >
-                  <div className="flex flex-col max-w-[65%]">
-                    <span
-                      className={`font-bold ${
-                        item.type === 'base'
-                          ? theme.textPrimary
-                          : theme.textSecondary
-                      }`}
-                    >
-                      {item.label}
-                    </span>
-
-                    {item.sub && (
-                      <span className={`text-[9px] ${theme.textSecondary} opacity-70 mt-0.5 leading-tight`}>
-                        {item.sub}
-                      </span>
-                    )}
-                  </div>
-
-                  <span
-                    className={`font-bold ${
-                      item.type === 'base'
-                        ? theme.textPrimary
-                        : 'text-[#df6a49]'
-                    }`}
-                  >
-                    {item.type === 'add' ? '+ ' : ''}
-                    Rp{(item.value || 0).toLocaleString('id-ID')}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="px-2 text-center">
+            {/* Harga jual final langsung tampil */}
+            <div className="px-2 py-1 text-center">
               <p className={`text-[9px] font-bold uppercase tracking-widest ${theme.textSecondary} mb-0.5`}>
                 Harga Jual Final
               </p>
 
-              <h4 className="text-2xl font-black text-[#df6a49] tracking-tight">
+              <h4 className="text-3xl font-black text-[#df6a49] tracking-tight">
                 Rp {(calcResult?.finalPricePerItem || 0).toLocaleString('id-ID')}
               </h4>
+            </div>
+
+            {/* Tombol lihat / sembunyikan detail */}
+            <button
+              type="button"
+              onClick={() => setShowDetail((v) => !v)}
+              aria-expanded={showDetail}
+              className={`mt-3 mx-auto h-8 px-4 rounded-full ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} flex items-center gap-1.5 text-[10px] font-bold ${theme.textSecondary} transition-all`}
+            >
+              {showDetail ? 'Sembunyikan Detail' : 'Lihat Detail'}
+              <Icons.ChevronRight
+                size={12}
+                className={`transition-transform duration-300 ${showDetail ? '-rotate-90' : 'rotate-90'}`}
+              />
+            </button>
+
+            {/* Rincian (animasi buka/tutup) */}
+            <div
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                showDetail ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0'
+              }`}
+            >
+              <div className="overflow-hidden min-h-0">
+                <div className={`w-full space-y-2.5 p-3.5 rounded-2xl ${theme.bgContainer} ${theme.shadowIn} text-xs`}>
+                  {(calcResult?.breakdown || []).map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex justify-between items-start ${
+                        item.type === 'base'
+                          ? 'border-b border-gray-400/20 pb-2.5 mb-1'
+                          : ''
+                      }`}
+                    >
+                      <div className="flex flex-col max-w-[65%]">
+                        <span
+                          className={`font-bold ${
+                            item.type === 'base'
+                              ? theme.textPrimary
+                              : theme.textSecondary
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+
+                        {item.sub && (
+                          <span className={`text-[9px] ${theme.textSecondary} opacity-70 mt-0.5 leading-tight`}>
+                            {item.sub}
+                          </span>
+                        )}
+                      </div>
+
+                      <span
+                        className={`font-bold ${
+                          item.type === 'base'
+                            ? theme.textPrimary
+                            : 'text-[#df6a49]'
+                        }`}
+                      >
+                        {item.type === 'add' ? '+ ' : ''}
+                        Rp{(item.value || 0).toLocaleString('id-ID')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         ) : (
@@ -284,7 +311,7 @@ const CalculatorView = () => {
             />
 
             <p className={`text-xs font-medium ${theme.textSecondary}`}>
-              Detail kalkulasi akan muncul di sini.
+              Harga jual final akan muncul di sini.
             </p>
           </div>
         )}

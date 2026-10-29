@@ -14,6 +14,14 @@ import { safeUrl, resolveMerchantKey, isAddablePromo, buildPromoFromHome, upgrad
 
 const AppContext = createContext(null);
 
+// Data awal kalkulator: marketplace default = yang terakhir dipilih (bukan selalu ShopeeFood)
+const emptyCalcData = (settings) => {
+  const keys = Object.keys(settings?.marketplaces || {});
+  const last = LS.get(KEYS.lastMerchant, '');
+  const merchant = keys.includes(last) ? last : (keys.includes('shopeefood') ? 'shopeefood' : (keys[0] || 'shopeefood'));
+  return { name: '', hargaNet: '', merchant };
+};
+
 export const useApp = () => {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error('useApp harus dipakai di dalam <AppProvider>');
@@ -33,7 +41,7 @@ export const AppProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => LS.get(KEYS.dark, false));
 
   // Kalkulator Core States
-  const [calcData, setCalcData] = useState({ name: '', hargaNet: '', merchant: 'shopeefood' });
+  const [calcData, setCalcData] = useState(() => emptyCalcData(getInitialUserData()?.calcSettings || DEFAULT_SETTINGS));
   const [calcResult, setCalcResult] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -83,6 +91,7 @@ export const AppProvider = ({ children }) => {
   // ---- Kalkulator & promo
   const handleCalcChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'merchant') LS.set(KEYS.lastMerchant, value); // ingat pilihan terakhir
     // Mengetik manual nama/harga berarti tidak lagi memakai menu tersimpan
     setCalcData(prev => ({ ...prev, [name]: value, ...(name === 'name' || name === 'hargaNet' ? { menuId: '' } : {}) }));
     if (calcResult) setCalcResult(null); 
@@ -209,6 +218,7 @@ const handleCalculate = () => {
   if (netPrice <= 0) return;
 
   const merchantId = calcData.merchant || 'shopeefood';
+  LS.set(KEYS.lastMerchant, merchantId);
 
   // [MODIFIED] Ambil persentase promo coret yang terpilih.
   const {
@@ -251,7 +261,7 @@ const handleCalculate = () => {
   // ---- Riwayat
   const handleEditHistory = (item) => {
     if(!item) return;
-    setCalcData(item.rawInputs || { name: '', hargaNet: '', merchant: 'shopeefood' });
+    setCalcData(item.rawInputs || emptyCalcData(calcSettings));
     setCalcResult(null);
     setActiveTab('kalkulator');
   };
@@ -289,7 +299,7 @@ const handleCalculate = () => {
     setCalcSettings(data?.calcSettings || DEFAULT_SETTINGS);
     setHistoryLog(data?.historyLog || []);
     setMenuItems(data?.menuItems || []);
-    setCalcData({ name: '', hargaNet: '', merchant: 'shopeefood' });
+    setCalcData(emptyCalcData(data?.calcSettings || DEFAULT_SETTINGS));
     setCalcResult(null);
     setUserProfile(toProfile(user));
     saveSession(user.id);
@@ -308,7 +318,7 @@ const handleCalculate = () => {
     setCalcSettings(DEFAULT_SETTINGS);
     setHistoryLog([]);
     setMenuItems([]);
-    setCalcData({ name: '', hargaNet: '', merchant: 'shopeefood' });
+    setCalcData(emptyCalcData(DEFAULT_SETTINGS));
     setCalcResult(null);
     setIsLogin(true);
     setCurrentView('auth');

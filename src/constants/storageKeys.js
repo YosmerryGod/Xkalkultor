@@ -5,4 +5,5 @@ export const KEYS = {
   banners: 'exkalt_banners',
   homePromos: 'exkalt_home_promos',
   userData: (id) => `exkalt_data_${id}`,
+  lastMerchant: 'exkalt_last_merchant',
 };
