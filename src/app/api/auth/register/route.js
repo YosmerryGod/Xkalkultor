@@ -35,7 +35,7 @@ export async function POST(request) {
       );
     }
 
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 255) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) {
       return NextResponse.json(
         { success: false, error: 'Format email tidak valid.' },
         { status: 400 }
