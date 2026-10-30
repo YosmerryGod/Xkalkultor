@@ -1,6 +1,6 @@
 // Service worker Exkalt: membuat app bisa dibuka offline setelah pernah dimuat sekali.
 // Naikkan VERSION setiap kali ingin memaksa cache lama dibuang.
-const VERSION = 'exkalt-v4';
+const VERSION = 'exkalt-v5'; // [MODIFIED] Clear the old cache that may contain stale API responses.
 const CACHE = `${VERSION}`;
 const PRECACHE = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'];
 
@@ -21,6 +21,9 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+
+  // [ADDED] Never cache API responses: auth sessions and account data must always come from the server.
+  if (url.pathname.startsWith('/api/')) return;
 
   // Halaman: coba jaringan dulu (selalu versi terbaru), jatuh ke cache saat offline.
   if (req.mode === 'navigate') {
