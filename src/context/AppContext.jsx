@@ -339,6 +339,14 @@ export const AppProvider = ({ children }) => {
 
   
 const handleCalculate = () => {
+  // [ADDED] Free accounts receive 10 calculations per local day; admin and PRO accounts are unlimited.
+  const hasUnlimitedCalculations = !!userProfile?.isAdmin || userProfile?.tier === 'PRO' || userProfile?.tier === 'PREMIUM';
+  const usageDate = getLocalUsageDate();
+  const currentUsage = dailyUsage?.date === usageDate ? dailyUsage.count : 0;
+  if (!hasUnlimitedCalculations && currentUsage >= 10) {
+    showToast('Batas 10 kalkulasi harian tercapai. Upgrade ke Premium untuk kalkulasi tanpa batas.', 'error');
+    return;
+  }
   const netPrice = parseNum(calcData.hargaNet, 0);
   if (netPrice <= 0) return;
 
