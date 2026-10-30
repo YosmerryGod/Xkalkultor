@@ -7,3 +7,9 @@ out
 .DS_Store
 .vercel
 .env*
+
+# [ADDED] Android signing keys and local release credentials must never be committed.
+*.jks
+*.keystore
+android/*.jks
+android/*.keystore
