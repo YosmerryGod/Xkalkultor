@@ -93,6 +93,10 @@ scripts/
 └── seed-admin.js        Membuat admin pertama
 ```
 
+## Aplikasi Android APK
+
+Panduan membuat APK Android menggunakan Trusted Web Activity (Bubblewrap) tersedia di [android/README.md](android/README.md). Package ID aplikasi adalah `com.xkalkultor.app`.
+
 ## Catatan migrasi dari versi lama
 
 Versi lama menyimpan akun, session, dan data aplikasi di localStorage. Versi backend ini memindahkan autentikasi dan data kalkulator akun ke PostgreSQL. Akun lama tidak otomatis menjadi akun database karena password lama memakai hash client-side yang tidak layak dipakai sebagai kredensial produksi. Buat akun baru atau lakukan migrasi akun secara terkontrol.
