@@ -70,7 +70,7 @@ jobs:
             VERSION_CODE="$INPUT_VERSION_CODE"
           fi
 
-          if ! [[ "$VERSION_NAME" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+          if ! [[ "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
             echo "Invalid version name: $VERSION_NAME"
             exit 1
           fi
@@ -109,7 +109,7 @@ jobs:
             const manifest = JSON.parse(fs.readFileSync(file, "utf8"));
             manifest.appVersionName = process.env.VERSION_NAME;
             manifest.appVersionCode = Number(process.env.VERSION_CODE);
-            fs.writeFileSync(file, JSON.stringify(manifest, null, 2) + "\\n");
+            fs.writeFileSync(file, JSON.stringify(manifest, null, 2) + "\n");
           '
 
       - name: Install Bubblewrap
@@ -144,12 +144,12 @@ jobs:
           fi
 
           zipalign -f -v 4 "$UNSIGNED_APK" "$RUNNER_TEMP/AYDO-aligned.apk"
-          apksigner sign \\
-            --ks "$GITHUB_WORKSPACE/android/android.keystore" \\
-            --ks-key-alias "$ANDROID_KEY_ALIAS" \\
-            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \\
-            --key-pass env:ANDROID_KEY_PASSWORD \\
-            --out "$RUNNER_TEMP/AYDO.apk" \\
+          apksigner sign \
+            --ks "$GITHUB_WORKSPACE/android/android.keystore" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEY_PASSWORD \
+            --out "$RUNNER_TEMP/AYDO.apk" \
             "$RUNNER_TEMP/AYDO-aligned.apk"
           apksigner verify --verbose --print-certs "$RUNNER_TEMP/AYDO.apk"
           zipalign -c -v 4 "$RUNNER_TEMP/AYDO.apk"
