@@ -11,7 +11,7 @@ const Header = () => {
   } = useApp();
 
   const fullName = [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(' ');
-  const initials = (fullName || 'U').split(/\\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase();
+  const initials = (fullName || 'U').split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase();
 
   return (
     <div className={`relative z-[100] flex flex-shrink-0 items-center justify-between px-6 pb-4 pt-7 ${theme.bgContainer} transition-colors duration-300`}>
