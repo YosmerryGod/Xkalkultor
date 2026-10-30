@@ -2,7 +2,25 @@ import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Icons } from '../icons/Icons';
 
-// [MODIFIED] Profile drawer keeps its 75% width with a more compact, professional visual scale.
+// [MODIFIED] Profile drawer uses stable dialog components to preserve input focus while typing.
+// [ADDED] Keep the dialog component outside ProfilePanel so typing does not remount inputs.
+const ProfileDialog = ({ title, subtitle, children, onSubmit, isDarkMode, theme, closeDialog }) => (
+  <div className="absolute inset-0 z-[130] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <div className={`w-full max-w-[390px] rounded-2xl border p-4 shadow-2xl ${isDarkMode ? 'border-[#303A46] bg-[#1A2028]' : 'border-white bg-[#edf1f6]'}`}>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 className={`text-sm font-extrabold ${theme.textPrimary}`}>{title}</h3>
+          <p className={`mt-1 text-[11px] ${theme.textSecondary}`}>{subtitle}</p>
+        </div>
+        <button type="button" onClick={closeDialog} aria-label="Tutup dialog" className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${theme.bgContainer} ${theme.shadowOut} ${theme.textSecondary}`}>
+          <Icons.X size={16} />
+        </button>
+      </div>
+      {onSubmit ? <form onSubmit={onSubmit} className="space-y-3">{children}</form> : <div className="space-y-4">{children}</div>}
+    </div>
+  </div>
+);
+
 const ProfilePanel = () => {
   const {
     userProfile, theme, isDarkMode, dailyUsage, setShowProfileMenu,
@@ -110,22 +128,7 @@ const ProfilePanel = () => {
     </button>
   );
 
-  const Dialog = ({ title, subtitle, children, onSubmit }) => (
-    <div className="absolute inset-0 z-[130] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className={`w-full max-w-[390px] rounded-2xl border p-4 shadow-2xl ${isDarkMode ? 'border-[#303A46] bg-[#1A2028]' : 'border-white bg-[#edf1f6]'}`}>
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <h3 className={`text-sm font-extrabold ${theme.textPrimary}`}>{title}</h3>
-            <p className={`mt-1 text-[11px] ${theme.textSecondary}`}>{subtitle}</p>
-          </div>
-          <button type="button" onClick={closeDialog} aria-label="Tutup dialog" className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${theme.bgContainer} ${theme.shadowOut} ${theme.textSecondary}`}>
-            <Icons.X size={16} />
-          </button>
-        </div>
-        {onSubmit ? <form onSubmit={onSubmit} className="space-y-3">{children}</form> : <div className="space-y-4">{children}</div>}
-      </div>
-    </div>
-  );
+
 
   return (
     <div className="fixed inset-0 z-[120] flex justify-end">
@@ -213,26 +216,26 @@ const ProfilePanel = () => {
 
         {/* [ADDED] Functional profile, password, help, and upgrade dialogs. */}
         {activeDialog === 'profile' && (
-          <Dialog title="Edit Profil" subtitle="Perubahan akan disimpan ke akun Anda." onSubmit={saveProfile}>
+          <ProfileDialog isDarkMode={isDarkMode} theme={theme} closeDialog={closeDialog} title="Edit Profil" subtitle="Perubahan akan disimpan ke akun Anda." onSubmit={saveProfile}>
             <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Nama depan<input className={`${inputClass} mt-1`} value={profileForm.firstName} onChange={(event) => setProfileForm((prev) => ({ ...prev, firstName: event.target.value }))} maxLength={100} required /></label>
             <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Nama belakang<input className={`${inputClass} mt-1`} value={profileForm.lastName} onChange={(event) => setProfileForm((prev) => ({ ...prev, lastName: event.target.value }))} maxLength={100} /></label>
             <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Nama toko<input className={`${inputClass} mt-1`} value={profileForm.storeName} onChange={(event) => setProfileForm((prev) => ({ ...prev, storeName: event.target.value }))} maxLength={150} /></label>
             <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Email<input type="email" className={`${inputClass} mt-1`} value={profileForm.email} onChange={(event) => setProfileForm((prev) => ({ ...prev, email: event.target.value }))} maxLength={255} required /></label>
             <button disabled={saving} className="mt-2 w-full rounded-xl bg-gradient-to-r from-[#FF984F] to-[#E94D27] px-3.5 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60">{saving ? 'Menyimpan...' : 'Simpan Perubahan'}</button>
-          </Dialog>
+          </ProfileDialog>
         )}
 
         {activeDialog === 'password' && (
-          <Dialog title="Ganti Password" subtitle="Masukkan password lama dan password baru." onSubmit={changePassword}>
+          <ProfileDialog isDarkMode={isDarkMode} theme={theme} closeDialog={closeDialog} title="Ganti Password" subtitle="Masukkan password lama dan password baru." onSubmit={changePassword}>
             <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Password saat ini<input type="password" autoComplete="current-password" className={`${inputClass} mt-1`} value={passwordForm.currentPassword} onChange={(event) => setPasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))} required /></label>
             <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Password baru<input type="password" autoComplete="new-password" className={`${inputClass} mt-1`} value={passwordForm.newPassword} onChange={(event) => setPasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))} minLength={8} maxLength={128} required /></label>
             <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Konfirmasi password baru<input type="password" autoComplete="new-password" className={`${inputClass} mt-1`} value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))} minLength={8} maxLength={128} required /></label>
             <button disabled={saving} className="mt-2 w-full rounded-xl bg-gradient-to-r from-[#FF984F] to-[#E94D27] px-3.5 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60">{saving ? 'Memproses...' : 'Perbarui Password'}</button>
-          </Dialog>
+          </ProfileDialog>
         )}
 
         {activeDialog === 'help' && (
-          <Dialog title="Bantuan AIDO" subtitle="Panduan singkat penggunaan aplikasi.">
+          <ProfileDialog isDarkMode={isDarkMode} theme={theme} closeDialog={closeDialog} title="Bantuan AIDO" subtitle="Panduan singkat penggunaan aplikasi.">
             <div className={`space-y-3 text-xs leading-relaxed ${theme.textSecondary}`}>
               <div><p className={`font-bold ${theme.textPrimary}`}>Kalkulator</p><p>Masukkan harga net, pilih marketplace, lalu jalankan kalkulasi untuk melihat harga jual.</p></div>
               <div><p className={`font-bold ${theme.textPrimary}`}>Menu tersimpan</p><p>Simpan nama menu dan harga agar bisa dipakai kembali tanpa mengetik ulang.</p></div>
@@ -240,17 +243,17 @@ const ProfilePanel = () => {
               <div><p className={`font-bold ${theme.textPrimary}`}>Akun</p><p>Ubah detail akun atau password dari menu profil. Jaga password Anda dan jangan membagikan kode akses.</p></div>
             </div>
             <button type="button" onClick={closeDialog} className="w-full rounded-xl bg-[#E96A3D] px-3.5 py-2.5 text-[13px] font-semibold text-white">Mengerti</button>
-          </Dialog>
+          </ProfileDialog>
         )}
 
         {activeDialog === 'upgrade' && (
-          <Dialog title="AIDO Premium" subtitle="Informasi paket berlangganan.">
+          <ProfileDialog isDarkMode={isDarkMode} theme={theme} closeDialog={closeDialog} title="AIDO Premium" subtitle="Informasi paket berlangganan.">
             <div className={`rounded-2xl p-4 ${isDarkMode ? 'bg-[#11171E]' : 'bg-white'}`}>
               <p className={`text-sm font-extrabold ${theme.textPrimary}`}>Kalkulasi tanpa batas</p>
               <p className={`mt-1 text-[11px] leading-relaxed ${theme.textSecondary}`}>Paket Premium akan membuka penggunaan kalkulator tanpa batas. Aktivasi pembayaran belum dihubungkan, jadi akun belum akan berubah menjadi Premium dari tombol ini.</p>
             </div>
             <button type="button" onClick={closeDialog} className="w-full rounded-xl bg-[#E96A3D] px-3.5 py-2.5 text-[13px] font-semibold text-white">Tutup</button>
-          </Dialog>
+          </ProfileDialog>
         )}
       </section>
     </div>
