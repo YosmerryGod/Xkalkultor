@@ -115,8 +115,11 @@ export const AppProvider = ({ children }) => {
         setHistoryLog(Array.isArray(data.historyLog) ? data.historyLog : []);
         setMenuItems(Array.isArray(data.menuItems) ? data.menuItems : []);
       })
-      .catch((error) => console.error('[Cloud Data] Load failed:', error))
-      .finally(() => { if (active) setCloudDataReady(true); });
+      .then(() => { if (active) setCloudDataReady(true); })
+      .catch((error) => {
+        console.error('[Cloud Data] Load failed:', error);
+        if (active) setCloudDataReady(false);
+      });
 
     return () => { active = false; };
   }, [userProfile?.id]);
