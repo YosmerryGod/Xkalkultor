@@ -31,9 +31,11 @@ export const useApp = () => {
 export const AppProvider = ({ children }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [currentView, setCurrentView] = useState(() => (getInitialSession() ? 'dashboard' : 'auth')); 
+  // [MODIFIED] Restore authentication from the server instead of trusting localStorage.
+  const [currentView, setCurrentView] = useState('auth');
   const [activeTab, setActiveTab] = useState('beranda');
-  const [userProfile, setUserProfile] = useState(() => getInitialSession());
+  const [userProfile, setUserProfile] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
   const [authForm, setAuthForm] = useState(EMPTY_AUTH_FORM);
   const [authError, setAuthError] = useState('');
 
@@ -68,6 +70,27 @@ export const AppProvider = ({ children }) => {
 
   const [banners, setBanners] = useState(() => LS.get(KEYS.banners, DEFAULT_BANNERS));
   const [homePromos, setHomePromos] = useState(() => upgradeHomePromos(LS.get(KEYS.homePromos, DEFAULT_HOME_PROMOS)));
+
+  // [ADDED] Restore the authenticated profile from the secure server session.
+  useEffect(() => {
+    let active = true;
+    fetch('/api/auth/me', { credentials: 'same-origin' })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok || !result.user) return null;
+        return result.user;
+      })
+      .then((user) => {
+        if (!active) return;
+        if (user) {
+          setUserProfile(user);
+          setCurrentView('dashboard');
+        }
+      })
+      .catch((error) => console.error('[Auth] Session restore failed:', error))
+      .finally(() => { if (active) setAuthReady(true); });
+    return () => { active = false; };
+  }, []);
 
   // Simpan otomatis ke penyimpanan browser
   useEffect(() => { LS.set(KEYS.dark, isDarkMode); }, [isDarkMode]);
@@ -302,7 +325,7 @@ const handleCalculate = () => {
     setCalcData(emptyCalcData(data?.calcSettings || DEFAULT_SETTINGS));
     setCalcResult(null);
     setUserProfile(toProfile(user));
-    saveSession(user.id);
+    // [MODIFIED] The server owns the session; do not store an auth ID in localStorage.
     setActiveTab('beranda');
     setAuthForm(EMPTY_AUTH_FORM);
     setAuthError('');
@@ -310,7 +333,10 @@ const handleCalculate = () => {
     setCurrentView('dashboard');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // [MODIFIED] Revoke the server-side session before clearing local UI state.
+    try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }); }
+    catch (error) { console.error('[Auth] Logout request failed:', error); }
     clearSession();
     setShowProfileMenu(false);
     setShowSettings(false);
@@ -324,12 +350,29 @@ const handleCalculate = () => {
     setCurrentView('auth');
   };
 
-  const handleAuthSubmit = (e) => {
+  const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
-    const result = isLogin ? login(authForm.identifier, authForm.password) : register(authForm);
-    if (result.error) return setAuthError(result.error);
-    startSession(result.user);
+    try {
+      // [MODIFIED] Authenticate through the server API; never verify passwords in the browser.
+      const response = await fetch(isLogin ? '/api/auth/login' : '/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(isLogin
+          ? { identifier: authForm.identifier, password: authForm.password }
+          : authForm),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        setAuthError(result.error || 'Autentikasi gagal. Silakan coba lagi.');
+        return;
+      }
+      startSession(result.user);
+    } catch (error) {
+      console.error('[Auth] Request failed:', error);
+      setAuthError('Tidak dapat terhubung ke server. Periksa koneksi internet.');
+    }
   };
 
   // ---- Konten Beranda (admin)
