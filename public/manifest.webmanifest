@@ -1,7 +1,7 @@
 {
-  "name": "Xkalkultor — Kalkulator Harga Jual",
-  "short_name": "Xkalkultor",
-  "description": "Kalkulator harga jual ShopeeFood, GrabFood, dan GoFood",
+  "name": "AYDO – Kalkulator Merchant",
+  "short_name": "AYDO",
+  "description": "Kalkulator harga jual untuk merchant ShopeeFood, GrabFood, dan GoFood",
   "id": "/",
   "start_url": "/",
   "scope": "/",
