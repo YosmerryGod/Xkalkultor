@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '../../../../lib/db';
+import { getDb } from '../../../lib/db';
 
 // [ADDED] Keep this endpoint on the Node.js runtime.
 export const runtime = 'nodejs';
