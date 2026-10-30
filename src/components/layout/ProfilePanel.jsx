@@ -162,11 +162,11 @@ const ProfilePanel = () => {
             </div>
           </div>
 
-          {/* [ADDED] Membership and usage overview. */}
+          {/* [MODIFIED] Membership, daily usage, and Premium upgrade are combined into one card. */}
           <div className={`overflow-hidden rounded-2xl border p-3.5 ${isDarkMode ? 'border-[#7B432D]/60 bg-gradient-to-br from-[#39271F] via-[#282329] to-[#1C222A]' : 'border-orange-200 bg-gradient-to-br from-orange-50 to-white'}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFB36E] to-[#E75B2D] text-white shadow-lg shadow-orange-900/20"><Icons.Sparkles size={20} /></span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFB36E] to-[#E75B2D] text-white shadow-lg shadow-orange-900/20"><Icons.Sparkles size={18} /></span>
                 <div>
                   <p className={`text-sm font-extrabold ${theme.textPrimary}`}>{isAdmin ? 'Admin Plan' : isPremium ? 'Premium Plan' : 'Free Plan'}</p>
                   <p className={`mt-0.5 text-[11px] ${theme.textSecondary}`}>{isAdmin ? 'Akses administrator tanpa batas' : isPremium ? 'Akses premium aktif' : 'Paket gratis untuk mulai berjualan'}</p>
@@ -182,17 +182,16 @@ const ProfilePanel = () => {
               <div className="h-full rounded-full bg-gradient-to-r from-[#FF9B52] to-[#E94D27] transition-all duration-500" style={{ width: `${usagePercent}%` }} />
             </div>
             <p className={`mt-2 text-[10px] ${theme.textSecondary}`}>{isPremium ? 'Akun ini memiliki akses kalkulasi tanpa batas.' : 'Batas 10 kalkulasi per hari. Kuota direset setiap hari.'}</p>
+            {!isPremium && (
+              <button type="button" onClick={() => setActiveDialog('upgrade')} className="mt-3 flex w-full items-center justify-between rounded-xl bg-gradient-to-r from-[#FF984F] to-[#E94D27] px-3 py-2.5 text-left text-white shadow-sm transition-all active:scale-[0.99]">
+                <span className="flex items-center gap-2">
+                  <Icons.Sparkles size={15} />
+                  <span className="text-xs font-bold">Upgrade ke Premium</span>
+                </span>
+                <Icons.ChevronRight size={16} />
+              </button>
+            )}
           </div>
-
-          {!isPremium && (
-            <button type="button" onClick={() => setActiveDialog('upgrade')} className="flex w-full items-center justify-between rounded-xl bg-gradient-to-r from-[#FF984F] to-[#E94D27] px-3.5 py-3 text-left text-white shadow-[0_8px_22px_rgba(226,83,39,0.22)] transition-all active:scale-[0.99]">
-              <span className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20"><Icons.Sparkles size={20} /></span>
-                <span><span className="block text-[13px] font-bold">Upgrade ke Premium</span><span className="mt-0.5 block text-[10px] text-white/80">Lihat informasi paket Premium</span></span>
-              </span>
-              <Icons.ChevronRight size={19} />
-            </button>
-          )}
 
           <div className="space-y-1.5">
             <p className={`px-1 text-[10px] font-extrabold uppercase tracking-[0.18em] ${theme.textSecondary}`}>Akun</p>
