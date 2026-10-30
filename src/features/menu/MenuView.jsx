@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Icons } from '../../components/icons/Icons';
 
-const EMPTY_FORM = { id: null, name: '', hargaNet: '' };
+const EMPTY_FORM = { id: null, name: '', hargaNet: '', category: 'Makanan' };
 
 const MenuView = () => {
   const { theme, sortedMenus, saveMenuItem, deleteMenuItem, selectMenuItem } = useApp();
@@ -19,6 +19,19 @@ const MenuView = () => {
     () => (keyword ? sortedMenus.filter((m) => (m.name || '').toLowerCase().includes(keyword)) : sortedMenus),
     [sortedMenus, keyword]
   );
+  // [ADDED] Live suggestions for existing menu names while creating or editing.
+  const nameSuggestions = useMemo(() => {
+    if (!form || !form.name.trim()) return [];
+    return sortedMenus
+      .filter((menu) => String(menu.name || '').toLowerCase().includes(form.name.trim().toLowerCase()))
+      .slice(0, 6);
+  }, [form, sortedMenus]);
+  const menuGroups = useMemo(() => filteredMenus.reduce((groups, menu) => {
+    const category = menu.category || 'Lainnya';
+    if (!groups[category]) groups[category] = [];
+    groups[category].push(menu);
+    return groups;
+  }, {}), [filteredMenus]);
 
   const openSearch = () => {
     setSearchOpen(true);
@@ -62,14 +75,57 @@ const MenuView = () => {
       {/* Form tambah / edit */}
       {form && (
         <form onSubmit={onSubmit} className={`mx-1 p-4 rounded-3xl ${theme.bgContainer} ${theme.shadowOut} border border-[#df6a49]/20 space-y-3`}>
-          <h5 className={`text-sm font-bold ${theme.textPrimary}`}>{form.id ? 'Edit Menu' : 'Menu Baru'}</h5>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h5 className={`text-sm font-bold ${theme.textPrimary}`}>{form.id ? 'Edit Menu' : 'Menu Baru'}</h5>
+              <p className={`mt-0.5 text-[10px] ${theme.textSecondary}`}>Kelola nama, kategori, dan harga menu.</p>
+            </div>
+            <span className="rounded-full bg-[#df6a49]/10 px-3 py-1 text-[9px] font-bold text-[#df6a49]">{form.id ? 'EDIT' : 'BARU'}</span>
+          </div>
           <label className="block space-y-1.5">
             <span className={labelCls}>Nama Menu</span>
-            <input
-              type="text" autoFocus placeholder="Contoh: Nasi Goreng"
-              value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+            <div className="relative">
+              <input
+                type="text" autoFocus placeholder="Contoh: Nasi Goreng"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                autoComplete="off"
+                className={inputCls}
+              />
+              {nameSuggestions.length > 0 && (
+                <div className={`absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-[#df6a49]/15 ${theme.bgContainer} ${theme.shadowOut}`}>
+                  <div className={`px-3 py-2 text-[9px] font-bold uppercase tracking-widest ${theme.textSecondary}`}>Menu yang sudah tersedia</div>
+                  {nameSuggestions.map((menu) => (
+                    <button
+                      key={menu.id}
+                      type="button"
+                      onClick={() => setForm({ id: menu.id, name: menu.name, hargaNet: String(menu.hargaNet), category: menu.category || 'Lainnya' })}
+                      className={`flex w-full items-center justify-between gap-3 border-t border-black/5 px-3 py-2.5 text-left dark:border-white/5 hover:bg-[#df6a49]/5`}
+                    >
+                      <span className="min-w-0">
+                        <span className={`block truncate text-xs font-bold ${theme.textPrimary}`}>{menu.name}</span>
+                        <span className={`text-[9px] ${theme.textSecondary}`}>{menu.category || 'Lainnya'} · Rp {Number(menu.hargaNet || 0).toLocaleString('id-ID')}</span>
+                      </span>
+                      <span className="shrink-0 text-[9px] font-bold text-[#df6a49]">Pilih</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </label>
+          <label className="block space-y-1.5">
+            <span className={labelCls}>Kategori Menu</span>
+            <select
+              value={form.category || 'Lainnya'}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
               className={inputCls}
-            />
+            >
+              <option value="Makanan">Makanan</option>
+              <option value="Minuman">Minuman</option>
+              <option value="Snack">Snack</option>
+              <option value="Paket">Paket</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
           </label>
           <label className="block space-y-1.5">
             <span className={labelCls}>Harga Net</span>
@@ -174,7 +230,17 @@ const MenuView = () => {
             <p className={`text-[11px] font-medium px-4 ${theme.textSecondary}`}>Tidak ada menu yang cocok dengan &ldquo;{query.trim()}&rdquo;.</p>
           </div>
         ) : (
-          filteredMenus.map((menu) => (
+          Object.entries(menuGroups).map(([category, menus]) => (
+            <section key={category} className="col-span-full space-y-2.5">
+              <div className="flex items-center justify-between px-1 pt-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-5 w-1 rounded-full bg-[#df6a49]" />
+                  <h3 className={`text-xs font-extrabold ${theme.textPrimary}`}>{category}</h3>
+                  <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${theme.bgContainer} ${theme.textSecondary}`}>{menus.length} menu</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 sm:gap-3">
+                {menus.map((menu) => (
             <div
               key={menu.id}
               className={`flex flex-col min-w-0 p-2.5 rounded-2xl ${theme.bgContainer} ${theme.shadowOut}`}
@@ -187,7 +253,7 @@ const MenuView = () => {
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      type="button" onClick={() => setForm({ id: menu.id, name: menu.name, hargaNet: String(menu.hargaNet) })} aria-label={`Edit ${menu.name}`}
+                      type="button" onClick={() => setForm({ id: menu.id, name: menu.name, hargaNet: String(menu.hargaNet), category: menu.category || 'Lainnya' })} aria-label={`Edit ${menu.name}`}
                       className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all"
                     >
                       <Icons.Edit size={11} />
@@ -223,6 +289,9 @@ const MenuView = () => {
                 <Icons.Calculator size={12} /> Hitung
               </button>
             </div>
+                ))}
+              </div>
+            </section>
           ))
         )}
       </div>
