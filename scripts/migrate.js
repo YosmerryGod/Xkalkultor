@@ -1,42 +1,58 @@
-// [ADDED] Run the initial PostgreSQL schema against the configured Neon database.
+
 const fs = require('node:fs');
 const path = require('node:path');
+const { Client } = require('pg');
 
 async function main() {
-  const databaseUrl =
-    process.env.POSTGRES_URL ||
-    process.env.DATABASE_URL ||
-    process.env.POSTGRES_URL_NON_POOLING;
+  const connectionString =
+  process.env.POSTGRES_URL ||
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL_NON_POOLING;
 
-  if (!databaseUrl) {
-    throw new Error('Missing POSTGRES_URL, DATABASE_URL, or POSTGRES_URL_NON_POOLING.');
+  if (!connectionString) {
+    throw new Error('Database URL tidak ditemukan.');
   }
 
-  const { neon } = await import('@neondatabase/serverless');
-  const sql = neon(databaseUrl);
+  const client = new Client({
+    connectionString,
+    ssl: { rejectUnauthorized: true },
+    connectionTimeoutMillis: 20000,
+  });
 
-  const schemaPath = path.join(__dirname, '..', 'src', 'db', 'schema.sql');
-  const schema = fs.readFileSync(schemaPath, 'utf8');
+  try {
+    console.log('Connecting to Neon...');
+    await client.connect();
+    console.log('Database connected.');
 
-  // [ADDED] The schema contains independent idempotent statements.
-  // Execute one statement at a time because Neon HTTP queries do not support
-  // sending a multi-statement SQL batch in a single request.
-  const statements = schema
-    .split(';')
-    .map((statement) => statement.trim())
-    .filter((statement) => statement.length > 0);
+    const schemaPath = path.join(
+      __dirname,
+      '..',
+      'src',
+      'db',
+      'schema.sql'
+    );
 
-  console.log(`Running ${statements.length} schema statements...`);
+    const schema = fs.readFileSync(schemaPath, 'utf8');
 
-  for (let index = 0; index < statements.length; index += 1) {
-    await sql.query(statements[index]);
-    console.log(`Applied statement ${index + 1}/${statements.length}`);
+    console.log('Applying database schema...');
+
+    await client.query(schema);
+
+    console.log('Database migration completed successfully.');
+  } catch (error) {
+    console.error('\nMIGRATION ERROR');
+    console.error('Message:', error.message);
+    console.error('Code:', error.code);
+    console.error('Detail:', error.detail);
+    console.error('Hint:', error.hint);
+    console.error('Stack:', error.stack);
+
+    throw error;
+  } finally {
+    await client.end();
   }
-
-  console.log('Xkalkultor database schema applied successfully.');
 }
 
-main().catch((error) => {
-  console.error('Database migration failed:', error.message);
+main().catch(() => {
   process.exitCode = 1;
 });
