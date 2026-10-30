@@ -38,6 +38,8 @@ export const AppProvider = ({ children }) => {
   const [authReady, setAuthReady] = useState(false);
   // [ADDED] Prevent autosave until the server snapshot has been loaded.
   const [cloudDataReady, setCloudDataReady] = useState(false);
+  // [ADDED] Shared home content is loaded before admin changes can be saved.
+  const [globalContentReady, setGlobalContentReady] = useState(false);
   const [authForm, setAuthForm] = useState(EMPTY_AUTH_FORM);
   const [authError, setAuthError] = useState('');
 
@@ -144,6 +146,44 @@ export const AppProvider = ({ children }) => {
     }, 700);
     return () => clearTimeout(timer);
   }, [calcSettings, historyLog, menuItems, userProfile?.id, cloudDataReady]);
+
+  // [ADDED] Load shared banners and promotions from the backend.
+  useEffect(() => {
+    let active = true;
+    fetch('/api/home-content')
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Gagal memuat konten beranda.');
+        if (active && result.data) {
+          setBanners(Array.isArray(result.data.banners) ? result.data.banners : DEFAULT_BANNERS);
+          setHomePromos(upgradeHomePromos(Array.isArray(result.data.homePromos) ? result.data.homePromos : DEFAULT_HOME_PROMOS));
+        }
+        if (active) setGlobalContentReady(true);
+      })
+      .catch((error) => console.error('[Home Content] Load failed:', error));
+    return () => { active = false; };
+  }, []);
+
+  // [ADDED] Only admins may publish shared home content to PostgreSQL.
+  useEffect(() => {
+    if (!userProfile?.isAdmin || !globalContentReady) return undefined;
+    const timer = setTimeout(() => {
+      fetch('/api/home-content', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ data: { banners, homePromos } }),
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            throw new Error(result.error || 'Gagal menyimpan konten beranda.');
+          }
+        })
+        .catch((error) => console.error('[Home Content] Save failed:', error));
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [banners, homePromos, userProfile?.isAdmin, globalContentReady]);
 
   // Simpan otomatis ke penyimpanan browser
   useEffect(() => { LS.set(KEYS.dark, isDarkMode); }, [isDarkMode]);
