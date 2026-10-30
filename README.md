@@ -1,6 +1,6 @@
-# Xkalkultor — Kalkulator Harga Jual
+# AYDO – Kalkulator Merchant
 
-Aplikasi kalkulator harga jual mobile-first untuk ShopeeFood, GrabFood, dan GoFood. Dibangun dengan Next.js App Router, React, Tailwind CSS, dan Neon PostgreSQL.
+Aplikasi kalkulator harga jual mobile-first untuk merchant ShopeeFood, GrabFood, dan GoFood. Dibangun dengan Next.js App Router, React, Tailwind CSS, dan Neon PostgreSQL.
 
 ## Menjalankan aplikasi
 
@@ -45,7 +45,7 @@ Linux/macOS:
 export ADMIN_EMAIL="admin@domainanda.com"
 export ADMIN_PASSWORD="gunakan-password-acak-minimal-12-karakter"
 export ADMIN_FIRST_NAME="Admin"
-export ADMIN_STORE_NAME="Exkalt Admin"
+export ADMIN_STORE_NAME="AYDO Admin"
 npm run db:seed-admin
 ```
 
@@ -55,7 +55,7 @@ PowerShell:
 $env:ADMIN_EMAIL="admin@domainanda.com"
 $env:ADMIN_PASSWORD="gunakan-password-acak-minimal-12-karakter"
 $env:ADMIN_FIRST_NAME="Admin"
-$env:ADMIN_STORE_NAME="Exkalt Admin"
+$env:ADMIN_STORE_NAME="AYDO Admin"
 npm run db:seed-admin
 ```
 
