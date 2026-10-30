@@ -29,17 +29,8 @@ const ProfilePanel = () => {
 
   const [activeDialog, setActiveDialog] = useState('');
   const [saving, setSaving] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    firstName: userProfile?.firstName || '',
-    lastName: userProfile?.lastName || '',
-    storeName: userProfile?.storeName || '',
-    email: userProfile?.email || '',
-  });
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
+  // [MODIFIED] Use native form values so typing does not trigger parent rerenders.
+
 
   if (!userProfile) return null;
 
@@ -54,7 +45,6 @@ const ProfilePanel = () => {
 
   const closeDialog = () => {
     setActiveDialog('');
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
   const saveProfile = async (event) => {
@@ -65,7 +55,12 @@ const ProfilePanel = () => {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify(profileForm),
+        body: JSON.stringify({
+          firstName: event.currentTarget.elements.firstName.value,
+          lastName: event.currentTarget.elements.lastName.value,
+          storeName: event.currentTarget.elements.storeName.value,
+          email: event.currentTarget.elements.email.value,
+        }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || 'Gagal memperbarui profil.');
@@ -81,11 +76,15 @@ const ProfilePanel = () => {
 
   const changePassword = async (event) => {
     event.preventDefault();
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    const form = event.currentTarget;
+    const currentPassword = form.elements.currentPassword.value;
+    const newPassword = form.elements.newPassword.value;
+    const confirmPassword = form.elements.confirmPassword.value;
+    if (newPassword !== confirmPassword) {
       showToast('Konfirmasi password baru tidak sama.', 'error');
       return;
     }
-    if (passwordForm.newPassword.length < 8) {
+    if (newPassword.length < 8) {
       showToast('Password baru minimal 8 karakter.', 'error');
       return;
     }
@@ -96,8 +95,8 @@ const ProfilePanel = () => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
+          currentPassword,
+          newPassword,
         }),
       });
       const result = await response.json();
@@ -217,19 +216,19 @@ const ProfilePanel = () => {
         {/* [ADDED] Functional profile, password, help, and upgrade dialogs. */}
         {activeDialog === 'profile' && (
           <ProfileDialog isDarkMode={isDarkMode} theme={theme} closeDialog={closeDialog} title="Edit Profil" subtitle="Perubahan akan disimpan ke akun Anda." onSubmit={saveProfile}>
-            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Nama depan<input className={`${inputClass} mt-1`} value={profileForm.firstName} onChange={(event) => setProfileForm((prev) => ({ ...prev, firstName: event.target.value }))} maxLength={100} required /></label>
-            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Nama belakang<input className={`${inputClass} mt-1`} value={profileForm.lastName} onChange={(event) => setProfileForm((prev) => ({ ...prev, lastName: event.target.value }))} maxLength={100} /></label>
-            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Nama toko<input className={`${inputClass} mt-1`} value={profileForm.storeName} onChange={(event) => setProfileForm((prev) => ({ ...prev, storeName: event.target.value }))} maxLength={150} /></label>
-            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Email<input type="email" className={`${inputClass} mt-1`} value={profileForm.email} onChange={(event) => setProfileForm((prev) => ({ ...prev, email: event.target.value }))} maxLength={255} required /></label>
+            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Nama depan<input name="firstName" defaultValue={userProfile.firstName || ''} className={`${inputClass} mt-1`} maxLength={100} required /></label>
+            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Nama belakang<input name="lastName" defaultValue={userProfile.lastName || ''} className={`${inputClass} mt-1`} maxLength={100} /></label>
+            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Nama toko<input name="storeName" defaultValue={userProfile.storeName || ''} className={`${inputClass} mt-1`} maxLength={150} /></label>
+            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Email<input name="email" type="email" defaultValue={userProfile.email || ''} className={`${inputClass} mt-1`} maxLength={255} required /></label>
             <button disabled={saving} className="mt-2 w-full rounded-xl bg-gradient-to-r from-[#FF984F] to-[#E94D27] px-3.5 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60">{saving ? 'Menyimpan...' : 'Simpan Perubahan'}</button>
           </ProfileDialog>
         )}
 
         {activeDialog === 'password' && (
           <ProfileDialog isDarkMode={isDarkMode} theme={theme} closeDialog={closeDialog} title="Ganti Password" subtitle="Masukkan password lama dan password baru." onSubmit={changePassword}>
-            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Password saat ini<input type="password" autoComplete="current-password" className={`${inputClass} mt-1`} value={passwordForm.currentPassword} onChange={(event) => setPasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))} required /></label>
-            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Password baru<input type="password" autoComplete="new-password" className={`${inputClass} mt-1`} value={passwordForm.newPassword} onChange={(event) => setPasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))} minLength={8} maxLength={128} required /></label>
-            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Konfirmasi password baru<input type="password" autoComplete="new-password" className={`${inputClass} mt-1`} value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))} minLength={8} maxLength={128} required /></label>
+            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Password saat ini<input name="currentPassword" type="password" autoComplete="current-password" className={`${inputClass} mt-1`} required /></label>
+            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Password baru<input name="newPassword" type="password" autoComplete="new-password" className={`${inputClass} mt-1`} minLength={8} maxLength={128} required /></label>
+            <label className={`block text-xs font-semibold ${theme.textSecondary}`}>Konfirmasi password baru<input name="confirmPassword" type="password" autoComplete="new-password" className={`${inputClass} mt-1`} minLength={8} maxLength={128} required /></label>
             <button disabled={saving} className="mt-2 w-full rounded-xl bg-gradient-to-r from-[#FF984F] to-[#E94D27] px-3.5 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60">{saving ? 'Memproses...' : 'Perbarui Password'}</button>
           </ProfileDialog>
         )}
