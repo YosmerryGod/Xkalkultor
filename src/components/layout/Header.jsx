@@ -49,6 +49,7 @@ const Header = () => {
           onClick={() => {
             // [ADDED] Enable smooth color transitions before switching the theme.
             document.documentElement.classList.add('theme-transition');
+            window.setTimeout(() => document.documentElement.classList.remove('theme-transition'), 500);
             setIsDarkMode(!isDarkMode);
           }}
           aria-label={isDarkMode ? 'Aktifkan light mode' : 'Aktifkan dark mode'}
