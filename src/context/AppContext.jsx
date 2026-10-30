@@ -223,16 +223,31 @@ export const AppProvider = ({ children }) => {
   };
 
   // ---- Menu tersimpan
-  const sortedMenus = [...(menuItems || [])].sort((a, b) => String(a.name).localeCompare(String(b.name), 'id'));
+  // [MODIFIED] Kelompokkan menu berdasarkan kategori, lalu urutkan nama di setiap kategori.
+  const sortedMenus = [...(menuItems || [])].sort((a, b) => {
+    const categoryCompare = String(a.category || 'Lainnya').localeCompare(String(b.category || 'Lainnya'), 'id');
+    return categoryCompare || String(a.name).localeCompare(String(b.name), 'id');
+  });
 
-  const saveMenuItem = ({ id, name, hargaNet }) => {
+  // [MODIFIED] Simpan kategori dan cegah nama menu duplikat tanpa membedakan kapitalisasi.
+  const saveMenuItem = ({ id, name, hargaNet, category }) => {
     const n = String(name || '').trim();
+    const normalizedName = n.toLocaleLowerCase('id-ID');
     const price = parseNum(hargaNet, 0);
+    const normalizedCategory = String(category || 'Lainnya').trim() || 'Lainnya';
     if (!n) { showToast('Isi nama menu.', 'error'); return false; }
     if (price <= 0) { showToast('Isi harga net lebih dari 0.', 'error'); return false; }
+    const duplicate = (menuItems || []).find((m) =>
+      String(m.name || '').trim().toLocaleLowerCase('id-ID') === normalizedName &&
+      String(m.id) !== String(id)
+    );
+    if (duplicate) {
+      showToast('Nama menu sudah tersedia. Pilih menu yang sudah ada.', 'error');
+      return false;
+    }
     setMenuItems((prev) => (id
-      ? (prev || []).map((m) => (m.id === id ? { ...m, name: n, hargaNet: price } : m))
-      : [...(prev || []), { id: Date.now(), name: n, hargaNet: price }]));
+      ? (prev || []).map((m) => (String(m.id) === String(id) ? { ...m, name: n, hargaNet: price, category: normalizedCategory } : m))
+      : [...(prev || []), { id: Date.now(), name: n, hargaNet: price, category: normalizedCategory }]));
     showToast(id ? 'Menu diperbarui.' : 'Menu ditambahkan.', 'success');
     return true;
   };
