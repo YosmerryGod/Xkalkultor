@@ -24,7 +24,7 @@ export async function PUT(request) {
     if (firstName.length > 100 || lastName.length > 100 || storeName.length > 150) {
       return NextResponse.json({ success: false, error: 'Nama atau nama toko terlalu panjang.' }, { status: 400 });
     }
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 255) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) {
       return NextResponse.json({ success: false, error: 'Format email tidak valid.' }, { status: 400 });
     }
 
