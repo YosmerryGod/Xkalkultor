@@ -332,7 +332,7 @@ const CalculatorView = () => {
                         <span className={`mt-0.5 block text-[10px] ${theme.textSecondary}`}>Platform merchant</span>
                       </span>
                       <span className={`flex h-5 w-5 items-center justify-center rounded-full border ${selected ? 'border-[#df6a49] bg-[#df6a49]' : 'border-gray-400/50'}`}>
-                        {selected && <Icons.Check size={12} className="text-white" />}
+                        {selected && <span className="text-[11px] font-black text-white">✓</span>}
                       </span>
                     </button>
                   );
@@ -351,7 +351,7 @@ const CalculatorView = () => {
                       <span className={`block text-sm font-bold ${theme.textPrimary}`}>Input manual</span>
                       <span className={`mt-0.5 block text-[10px] ${theme.textSecondary}`}>Tetap gunakan nama dan harga yang diketik</span>
                     </span>
-                    {!selectedMenuId && <Icons.Check size={17} className="text-[#df6a49]" />}
+                    {!selectedMenuId && <span className="text-sm font-black text-[#df6a49]">✓</span>}
                   </button>
                   {sortedMenus.map((menu) => {
                     const selected = selectedMenuId === String(menu.id);
@@ -369,7 +369,7 @@ const CalculatorView = () => {
                           <span className={`block truncate text-sm font-bold ${theme.textPrimary}`}>{menu.name}</span>
                           <span className={`mt-0.5 block text-[10px] ${theme.textSecondary}`}>Rp {Number(menu.hargaNet || 0).toLocaleString('id-ID')}</span>
                         </span>
-                        {selected && <Icons.Check size={17} className="text-[#df6a49]" />}
+                        {selected && <span className="text-sm font-black text-[#df6a49]">✓</span>}
                       </button>
                     );
                   })}
