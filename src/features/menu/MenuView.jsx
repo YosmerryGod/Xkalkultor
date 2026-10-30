@@ -2,30 +2,61 @@ import { useMemo, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Icons } from '../../components/icons/Icons';
 
-const EMPTY_FORM = { id: null, name: '', hargaNet: '', category: 'Makanan' };
+const EMPTY_FORM = { id: null, name: '', hargaNet: '', category: 'Makanan', image: '' };
+const CATEGORIES = ['Semua', 'Makanan', 'Minuman', 'Snack', 'Paket', 'Lainnya'];
+
+// [ADDED] Kompres foto menu agar ukuran data tetap ringan untuk sinkronisasi akun.
+const fileToMenuImage = (file) => new Promise((resolve, reject) => {
+  if (!file || !file.type.startsWith('image/')) return reject(new Error('Pilih file gambar yang valid.'));
+  if (file.size > 10 * 1024 * 1024) return reject(new Error('Ukuran gambar maksimal 10 MB.'));
+  const reader = new FileReader();
+  reader.onerror = () => reject(new Error('Gambar gagal dibaca.'));
+  reader.onload = () => {
+    const image = new Image();
+    image.onerror = () => reject(new Error('Format gambar tidak dapat dibaca.'));
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      const size = 320;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const scale = Math.max(size / image.width, size / image.height);
+      const width = image.width * scale;
+      const height = image.height * scale;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.78));
+    };
+    image.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
 
 const MenuView = () => {
-  const { theme, sortedMenus, saveMenuItem, deleteMenuItem, selectMenuItem } = useApp();
-  const [form, setForm] = useState(null); // null = form tertutup
+  const { theme, sortedMenus, saveMenuItem, deleteMenuItem, selectMenuItem, showToast } = useApp();
+  const [form, setForm] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('Semua');
+  const [imageLoading, setImageLoading] = useState(false);
   const searchRef = useRef(null);
-
-  const inputCls = `w-full h-12 px-3 rounded-2xl ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-xs font-semibold`;
-  const labelCls = `text-[10px] font-bold tracking-widest uppercase ml-1 ${theme.textSecondary}`;
+  const fileRef = useRef(null);
 
   const keyword = query.trim().toLowerCase();
-  const filteredMenus = useMemo(
-    () => (keyword ? sortedMenus.filter((m) => (m.name || '').toLowerCase().includes(keyword)) : sortedMenus),
-    [sortedMenus, keyword]
-  );
-  // [ADDED] Live suggestions for existing menu names while creating or editing.
+  const filteredMenus = useMemo(() => sortedMenus.filter((menu) =>
+    (!keyword || String(menu.name || '').toLowerCase().includes(keyword)) &&
+    (activeCategory === 'Semua' || (menu.category || 'Lainnya') === activeCategory)
+  ), [sortedMenus, keyword, activeCategory]);
+
   const nameSuggestions = useMemo(() => {
     if (!form || !form.name.trim()) return [];
-    return sortedMenus
-      .filter((menu) => String(menu.name || '').toLowerCase().includes(form.name.trim().toLowerCase()))
-      .slice(0, 6);
+    return sortedMenus.filter((menu) =>
+      String(menu.name || '').toLowerCase().includes(form.name.trim().toLowerCase()) &&
+      String(menu.id) !== String(form.id)
+    ).slice(0, 5);
   }, [form, sortedMenus]);
+
   const menuGroups = useMemo(() => filteredMenus.reduce((groups, menu) => {
     const category = menu.category || 'Lainnya';
     if (!groups[category]) groups[category] = [];
@@ -33,262 +64,183 @@ const MenuView = () => {
     return groups;
   }, {}), [filteredMenus]);
 
-  const openSearch = () => {
-    setSearchOpen(true);
-    // tunggu animasi mulai, lalu fokus ke input
-    setTimeout(() => searchRef.current?.focus(), 120);
-  };
+  const inputCls = `w-full h-12 px-4 rounded-xl border ${theme.border} ${theme.bgContainer} ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-[#df6a49]/25 text-sm font-medium`;
+  const labelCls = `block mb-2 text-[10px] font-bold tracking-wider uppercase ${theme.textSecondary}`;
 
-  const closeSearch = () => {
-    setSearchOpen(false);
-    setQuery('');
-  };
-
-  const onSubmit = (e) => {
-    e.preventDefault();
+  const onSubmit = (event) => {
+    event.preventDefault();
+    if (imageLoading) return;
     if (saveMenuItem(form)) setForm(null);
+  };
+
+  const onChooseImage = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setImageLoading(true);
+    try {
+      const image = await fileToMenuImage(file);
+      setForm((prev) => ({ ...prev, image }));
+    } catch (error) {
+      showToast(error.message || 'Gagal memproses gambar.', 'error');
+    } finally {
+      setImageLoading(false);
+      event.target.value = '';
+    }
   };
 
   const onDelete = (menu) => {
     if (window.confirm(`Hapus menu "${menu.name}"?`)) deleteMenuItem(menu.id);
   };
 
+  const renderMenuImage = (menu, size = 'h-14 w-14') => (
+    <div className={`${size} shrink-0 overflow-hidden rounded-2xl bg-[#df6a49]/10 flex items-center justify-center text-[#df6a49] font-extrabold text-xl uppercase`}>
+      {menu.image
+        ? <img src={menu.image} alt={menu.name} className="h-full w-full object-cover" />
+        : (String(menu.name || '?').trim().charAt(0) || '?')}
+    </div>
+  );
+
   return (
-    <div className="flex flex-col space-y-4">
-      {/* Header */}
-      <div className="flex justify-between items-end gap-3 px-1 mt-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h2 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${theme.textPrimary}`}>Menu</h2>
-            {sortedMenus.length > 0 && (
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${theme.bgContainer} ${theme.shadowIn} ${theme.textSecondary}`}>
-                {keyword ? `${filteredMenus.length}/${sortedMenus.length}` : sortedMenus.length}
-              </span>
-            )}
-          </div>
-          <p className={`text-xs mt-0.5 font-medium ${theme.textSecondary}`}>
-            Simpan harga net, lalu pilih dari dropdown di Kalkulator.
-          </p>
+    <div className="flex flex-col gap-5 pb-5">
+      {/* [MODIFIED] Header lebih ringkas dengan ringkasan jumlah menu dan tombol aksi utama. */}
+      <div className="flex items-center justify-between gap-3 pt-2">
+        <div>
+          <h2 className={`text-2xl font-extrabold tracking-tight ${theme.textPrimary}`}>Manajemen Menu</h2>
+          <p className={`mt-1 text-xs ${theme.textSecondary}`}>Atur produk, kategori, foto, dan harga net.</p>
+        </div>
+        <div className="text-right">
+          <p className={`text-2xl font-extrabold tabular-nums ${theme.textPrimary}`}>{sortedMenus.length}</p>
+          <p className={`text-[10px] font-semibold ${theme.textSecondary}`}>Total menu</p>
         </div>
       </div>
 
-      {/* Form tambah / edit */}
+      {/* [MODIFIED] Form tambah/edit sebagai panel yang rapi. */}
       {form && (
-        <form onSubmit={onSubmit} className={`mx-1 p-4 rounded-3xl ${theme.bgContainer} ${theme.shadowOut} border border-[#df6a49]/20 space-y-3`}>
-          <div className="flex items-center justify-between gap-3">
+        <form onSubmit={onSubmit} className={`rounded-2xl border ${theme.border} ${theme.bgContainer} p-4 shadow-sm space-y-4`}>
+          <div className="flex items-center justify-between">
             <div>
-              <h5 className={`text-sm font-bold ${theme.textPrimary}`}>{form.id ? 'Edit Menu' : 'Menu Baru'}</h5>
-              <p className={`mt-0.5 text-[10px] ${theme.textSecondary}`}>Kelola nama, kategori, dan harga menu.</p>
+              <h3 className={`text-base font-extrabold ${theme.textPrimary}`}>{form.id ? 'Edit Menu' : 'Tambah Menu'}</h3>
+              <p className={`text-xs mt-1 ${theme.textSecondary}`}>Lengkapi informasi produk.</p>
             </div>
-            <span className="rounded-full bg-[#df6a49]/10 px-3 py-1 text-[9px] font-bold text-[#df6a49]">{form.id ? 'EDIT' : 'BARU'}</span>
-          </div>
-          <label className="block space-y-1.5">
-            <span className={labelCls}>Nama Menu</span>
-            <div className="relative">
-              <input
-                type="text" autoFocus placeholder="Contoh: Nasi Goreng"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                autoComplete="off"
-                className={inputCls}
-              />
-              {nameSuggestions.length > 0 && (
-                <div className={`absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-[#df6a49]/15 ${theme.bgContainer} ${theme.shadowOut}`}>
-                  <div className={`px-3 py-2 text-[9px] font-bold uppercase tracking-widest ${theme.textSecondary}`}>Menu yang sudah tersedia</div>
-                  {nameSuggestions.map((menu) => (
-                    <button
-                      key={menu.id}
-                      type="button"
-                      onClick={() => setForm({ id: menu.id, name: menu.name, hargaNet: String(menu.hargaNet), category: menu.category || 'Lainnya' })}
-                      className={`flex w-full items-center justify-between gap-3 border-t border-black/5 px-3 py-2.5 text-left dark:border-white/5 hover:bg-[#df6a49]/5`}
-                    >
-                      <span className="min-w-0">
-                        <span className={`block truncate text-xs font-bold ${theme.textPrimary}`}>{menu.name}</span>
-                        <span className={`text-[9px] ${theme.textSecondary}`}>{menu.category || 'Lainnya'} · Rp {Number(menu.hargaNet || 0).toLocaleString('id-ID')}</span>
-                      </span>
-                      <span className="shrink-0 text-[9px] font-bold text-[#df6a49]">Pilih</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </label>
-          <label className="block space-y-1.5">
-            <span className={labelCls}>Kategori Menu</span>
-            <select
-              value={form.category || 'Lainnya'}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className={inputCls}
-            >
-              <option value="Makanan">Makanan</option>
-              <option value="Minuman">Minuman</option>
-              <option value="Snack">Snack</option>
-              <option value="Paket">Paket</option>
-              <option value="Lainnya">Lainnya</option>
-            </select>
-          </label>
-          <label className="block space-y-1.5">
-            <span className={labelCls}>Harga Net</span>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none font-bold text-gray-400 text-xs">Rp</div>
-              <input
-                type="number" inputMode="numeric" placeholder="0"
-                value={form.hargaNet} onChange={(e) => setForm({ ...form, hargaNet: e.target.value })}
-                className={`${inputCls} pl-9 text-right font-bold`}
-              />
-            </div>
-          </label>
-          <div className="flex gap-3 pt-1">
-            <button
-              type="button" onClick={() => setForm(null)}
-              className={`flex-1 h-11 rounded-2xl ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} text-xs font-bold ${theme.textSecondary}`}
-            >
-              Batal
+            <button type="button" onClick={() => setForm(null)} aria-label="Tutup form" className={`h-9 w-9 rounded-xl flex items-center justify-center ${theme.textSecondary} ${theme.bgApp}`}>
+              <Icons.X size={16} />
             </button>
-            <button
-              type="submit"
-              className="flex-1 h-11 rounded-2xl bg-black text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-800 active:scale-[0.98] transition-all"
-            >
-              <Icons.Save size={14} /> Simpan
+          </div>
+
+          <div className="flex items-center gap-3">
+            {renderMenuImage(form, 'h-20 w-20')}
+            <div className="min-w-0 flex-1">
+              <p className={`text-xs font-bold ${theme.textPrimary}`}>{form.image ? 'Foto menu dipilih' : 'Foto menu (opsional)'}</p>
+              <p className={`mt-1 text-[10px] ${theme.textSecondary}`}>{form.image ? 'Foto akan tampil pada daftar menu.' : 'Jika kosong, gunakan huruf awal nama menu.'}</p>
+              <div className="flex gap-2 mt-2">
+                <button type="button" onClick={() => fileRef.current?.click()} className="rounded-lg bg-[#df6a49]/10 px-3 py-2 text-[10px] font-bold text-[#df6a49]">
+                  {form.image ? 'Ganti foto' : 'Pilih foto'}
+                </button>
+                {form.image && <button type="button" onClick={() => setForm((prev) => ({ ...prev, image: '' }))} className={`rounded-lg px-3 py-2 text-[10px] font-bold ${theme.textSecondary}`}>Hapus foto</button>}
+              </div>
+              <input ref={fileRef} type="file" accept="image/*" onChange={onChooseImage} className="hidden" />
+            </div>
+          </div>
+
+          <label className="block">
+            <span className={labelCls}>Nama Menu</span>
+            <input autoFocus type="text" autoComplete="off" placeholder="Contoh: Ayam Panggang" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} className={inputCls} />
+            {nameSuggestions.length > 0 && (
+              <div className={`mt-2 overflow-hidden rounded-xl border ${theme.border} ${theme.bgApp}`}>
+                <p className={`px-3 py-2 text-[9px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>Menu serupa sudah tersedia</p>
+                {nameSuggestions.map((menu) => (
+                  <button key={menu.id} type="button" onClick={() => setForm({ id: menu.id, name: menu.name, hargaNet: String(menu.hargaNet), category: menu.category || 'Lainnya', image: menu.image || '' })} className={`flex w-full items-center gap-3 border-t ${theme.border} px-3 py-2 text-left`}>
+                    {renderMenuImage(menu, 'h-9 w-9')}
+                    <span className="min-w-0 flex-1">
+                      <span className={`block truncate text-xs font-bold ${theme.textPrimary}`}>{menu.name}</span>
+                      <span className={`text-[10px] ${theme.textSecondary}`}>{menu.category || 'Lainnya'} · Rp {Number(menu.hargaNet || 0).toLocaleString('id-ID')}</span>
+                    </span>
+                    <span className="text-[10px] font-bold text-[#df6a49]">Pilih</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </label>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label>
+              <span className={labelCls}>Kategori</span>
+              <select value={form.category || 'Lainnya'} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))} className={inputCls}>
+                {CATEGORIES.filter((category) => category !== 'Semua').map((category) => <option key={category} value={category}>{category}</option>)}
+              </select>
+            </label>
+            <label>
+              <span className={labelCls}>Harga Net</span>
+              <div className="relative">
+                <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold ${theme.textSecondary}`}>Rp</span>
+                <input type="number" min="1" inputMode="numeric" placeholder="0" value={form.hargaNet} onChange={(event) => setForm((prev) => ({ ...prev, hargaNet: event.target.value }))} className={`${inputCls} pl-10`} />
+              </div>
+            </label>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={() => setForm(null)} className={`h-11 flex-1 rounded-xl border ${theme.border} text-xs font-bold ${theme.textSecondary}`}>Batal</button>
+            <button type="submit" disabled={imageLoading} className="h-11 flex-1 rounded-xl bg-[#df6a49] text-white text-xs font-bold disabled:opacity-50">
+              {imageLoading ? 'Memproses foto...' : 'Simpan Menu'}
             </button>
           </div>
         </form>
       )}
 
-      {/* Toolbar: Search + Tambah bersampingan. Search memanjang saat ditekan */}
-      {(sortedMenus.length > 0 || !form) && (
-        <div className="flex items-center justify-end gap-2 px-1">
-          {sortedMenus.length > 0 && (
-            <div
-              className={`relative h-10 min-w-0 basis-10 rounded-full overflow-hidden transition-[flex-grow,box-shadow] duration-300 ease-out ${theme.bgContainer} ${
-                searchOpen ? `grow ${theme.shadowIn}` : `grow-0 ${theme.shadowOut}`
-              }`}
-            >
-              <button
-                type="button"
-                onClick={searchOpen ? () => searchRef.current?.focus() : openSearch}
-                aria-label="Cari menu"
-                className={`absolute left-0 top-0 w-10 h-10 flex items-center justify-center transition-colors ${
-                  searchOpen ? theme.textSecondary : 'text-[#df6a49]'
-                }`}
-              >
-                <Icons.Search size={16} />
-              </button>
-
-              <input
-                ref={searchRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Escape' && closeSearch()}
-                onBlur={() => !query && setSearchOpen(false)}
-                placeholder="Cari nama menu..."
-                tabIndex={searchOpen ? 0 : -1}
-                aria-hidden={!searchOpen}
-                className={`absolute inset-0 w-full h-full pl-10 pr-10 bg-transparent focus:outline-none text-xs font-semibold transition-opacity duration-200 ${theme.textPrimary} ${
-                  searchOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'
-                }`}
-              />
-
-              <button
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={closeSearch}
-                aria-label="Tutup pencarian"
-                tabIndex={searchOpen ? 0 : -1}
-                className={`absolute right-0 top-0 w-10 h-10 flex items-center justify-center transition-opacity duration-200 ${theme.textSecondary} ${
-                  searchOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'
-                }`}
-              >
-                <Icons.X size={14} />
-              </button>
-            </div>
-          )}
-
-          {!form && (
-            <button
-              type="button"
-              onClick={() => setForm(EMPTY_FORM)}
-              className={`shrink-0 h-10 px-4 rounded-full ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} flex items-center gap-2 text-xs font-bold text-[#df6a49] transition-all`}
-            >
-              <Icons.Plus size={14} /> Tambah
-            </button>
-          )}
+      {/* [MODIFIED] Search dan tombol tambah berada dalam satu toolbar. */}
+      <div className="flex items-center gap-2">
+        <div className={`flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border ${theme.border} ${theme.bgContainer} px-3`}>
+          <Icons.Search size={16} className={theme.textSecondary} />
+          <input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari nama menu..." className={`w-full min-w-0 bg-transparent text-xs font-medium outline-none ${theme.textPrimary}`} />
+          {query && <button type="button" onClick={() => setQuery('')} aria-label="Hapus pencarian"><Icons.X size={14} className={theme.textSecondary} /></button>}
         </div>
-      )}
+        {!form && <button type="button" onClick={() => setForm({ ...EMPTY_FORM })} className="h-11 shrink-0 rounded-xl bg-[#df6a49] px-4 text-xs font-bold text-white flex items-center gap-2"><Icons.Plus size={15} /> Tambah</button>}
+      </div>
 
-      {/* Grid daftar menu: 3 kolom (HP), 4 kolom (sm ke atas) */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 sm:gap-3 px-1 pb-4">
+      {/* [ADDED] Filter kategori horizontal. */}
+      <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
+        {CATEGORIES.map((category) => {
+          const count = category === 'Semua' ? sortedMenus.length : sortedMenus.filter((menu) => (menu.category || 'Lainnya') === category).length;
+          return (
+            <button key={category} type="button" onClick={() => setActiveCategory(category)} className={`shrink-0 rounded-full px-3.5 py-2 text-[10px] font-bold transition-colors ${activeCategory === category ? 'bg-[#df6a49] text-white' : `${theme.bgContainer} ${theme.textSecondary} border ${theme.border}`}`}>
+              {category} <span className={activeCategory === category ? 'text-white/75' : 'opacity-60'}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* [MODIFIED] Daftar menu berupa baris yang lebih mudah dibaca. */}
+      <div className="space-y-5">
         {sortedMenus.length === 0 ? (
-          <div className={`col-span-full py-10 rounded-3xl ${theme.bgContainer} ${theme.shadowIn} flex flex-col items-center justify-center text-center opacity-60 border border-dashed ${theme.border}`}>
-            <Icons.Package size={22} className={`mb-2 ${theme.textSecondary}`} />
-            <p className={`text-[11px] font-medium ${theme.textSecondary}`}>Belum ada menu. Tekan Tambah untuk membuat.</p>
+          <div className={`rounded-2xl border border-dashed ${theme.border} py-12 text-center ${theme.textSecondary}`}>
+            <Icons.Package size={28} className="mx-auto mb-3 opacity-50" />
+            <p className="text-sm font-bold">Belum ada menu</p>
+            <p className="mt-1 text-xs">Tekan Tambah untuk membuat menu pertama.</p>
           </div>
         ) : filteredMenus.length === 0 ? (
-          <div className={`col-span-full py-10 rounded-3xl ${theme.bgContainer} ${theme.shadowIn} flex flex-col items-center justify-center text-center opacity-60 border border-dashed ${theme.border}`}>
-            <Icons.Search size={22} className={`mb-2 ${theme.textSecondary}`} />
-            <p className={`text-[11px] font-medium px-4 ${theme.textSecondary}`}>Tidak ada menu yang cocok dengan &ldquo;{query.trim()}&rdquo;.</p>
-          </div>
+          <div className={`rounded-2xl border border-dashed ${theme.border} py-10 text-center text-xs ${theme.textSecondary}`}>Tidak ada menu yang cocok.</div>
         ) : (
           Object.entries(menuGroups).map(([category, menus]) => (
-            <section key={category} className="col-span-full space-y-2.5">
-              <div className="flex items-center justify-between px-1 pt-2">
-                <div className="flex items-center gap-2">
-                  <span className="h-5 w-1 rounded-full bg-[#df6a49]" />
-                  <h3 className={`text-xs font-extrabold ${theme.textPrimary}`}>{category}</h3>
-                  <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${theme.bgContainer} ${theme.textSecondary}`}>{menus.length} menu</span>
-                </div>
+            <section key={category} className="space-y-2.5">
+              <div className="flex items-center justify-between px-1">
+                <h3 className={`text-sm font-extrabold ${theme.textPrimary}`}>{category}</h3>
+                <span className={`text-[10px] font-semibold ${theme.textSecondary}`}>{menus.length} menu</span>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 sm:gap-3">
+              <div className="space-y-2">
                 {menus.map((menu) => (
-            <div
-              key={menu.id}
-              className={`flex flex-col min-w-0 p-2.5 rounded-2xl ${theme.bgContainer} ${theme.shadowOut}`}
-            >
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-1">
-                  <div className="w-6 h-6 shrink-0 rounded-lg bg-[#df6a49]/10 text-[#df6a49] flex items-center justify-center text-[10px] font-extrabold uppercase">
-                    {(menu.name || '?').trim().charAt(0) || '?'}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button" onClick={() => setForm({ id: menu.id, name: menu.name, hargaNet: String(menu.hargaNet), category: menu.category || 'Lainnya' })} aria-label={`Edit ${menu.name}`}
-                      className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all"
-                    >
-                      <Icons.Edit size={11} />
-                    </button>
-                    <button
-                      type="button" onClick={() => onDelete(menu)} aria-label={`Hapus ${menu.name}`}
-                      className="w-6 h-6 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500/20 active:scale-95 transition-all"
-                    >
-                      <Icons.Trash2 size={11} />
-                    </button>
-                  </div>
-                </div>
-                <h4
-                  title={menu.name}
-                  className={`mt-2 text-[11px] sm:text-xs font-bold leading-snug line-clamp-2 min-h-[2.25em] ${theme.textPrimary}`}
-                >
-                  {menu.name}
-                </h4>
-                <div className={`mt-2 px-2 py-1.5 rounded-xl ${theme.shadowIn} min-w-0`}>
-                  <p className={`text-[8px] font-bold tracking-widest uppercase leading-none ${theme.textSecondary} opacity-70`}>Harga Net</p>
-                  <p className={`mt-1 text-xs sm:text-[13px] font-extrabold tabular-nums leading-none truncate ${theme.textPrimary}`}>
-                    <span className={`text-[9px] font-bold mr-0.5 ${theme.textSecondary}`}>Rp</span>
-                    {(menu.hargaNet || 0).toLocaleString('id-ID')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Aksi utama (paling bawah) */}
-              <button
-                type="button" onClick={() => selectMenuItem(menu.id, true)} aria-label={`Hitung ${menu.name}`}
-                className={`mt-2.5 w-full h-8 rounded-xl ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} flex items-center justify-center gap-1.5 text-[10px] font-bold text-[#df6a49] transition-all`}
-              >
-                <Icons.Calculator size={12} /> Hitung
-              </button>
-            </div>
+                  <article key={menu.id} className={`flex items-center gap-3 rounded-2xl border ${theme.border} ${theme.bgContainer} p-3 shadow-sm`}>
+                    {renderMenuImage(menu)}
+                    <div className="min-w-0 flex-1">
+                      <h4 className={`truncate text-sm font-bold ${theme.textPrimary}`}>{menu.name}</h4>
+                      <p className={`mt-1 text-[10px] ${theme.textSecondary}`}>{menu.category || 'Lainnya'}</p>
+                      <p className={`mt-1 text-sm font-extrabold tabular-nums ${theme.textPrimary}`}>Rp {Number(menu.hargaNet || 0).toLocaleString('id-ID')}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-col gap-1.5">
+                      <button type="button" onClick={() => setForm({ id: menu.id, name: menu.name, hargaNet: String(menu.hargaNet), category: menu.category || 'Lainnya', image: menu.image || '' })} aria-label={`Edit ${menu.name}`} className={`h-8 w-8 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-500`}><Icons.Edit size={14} /></button>
+                      <button type="button" onClick={() => onDelete(menu)} aria-label={`Hapus ${menu.name}`} className="h-8 w-8 rounded-lg flex items-center justify-center bg-red-500/10 text-red-500"><Icons.Trash2 size={14} /></button>
+                    </div>
+                    <button type="button" onClick={() => selectMenuItem(menu.id, true)} aria-label={`Hitung ${menu.name}`} className="h-10 shrink-0 rounded-xl bg-[#df6a49]/10 px-3 text-[10px] font-bold text-[#df6a49]">Hitung</button>
+                  </article>
                 ))}
               </div>
             </section>
