@@ -115,6 +115,27 @@ jobs:
       - name: Install Bubblewrap
         run: npm install --global @bubblewrap/cli@1.27.0
 
+      - name: Configure Bubblewrap JDK and Android SDK
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME }}
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.bubblewrap"
+          node -e '
+            const fs = require("node:fs");
+            const os = require("node:os");
+            const path = require("node:path");
+            const config = {
+              jdkPath: process.env.JAVA_HOME,
+              androidSdkPath: process.env.ANDROID_HOME
+            };
+            fs.writeFileSync(
+              path.join(os.homedir(), ".bubblewrap", "config.json"),
+              JSON.stringify(config, null, 2) + "\\n"
+            );
+          '
+
       - name: Update Android project
         working-directory: android
         run: bubblewrap update --skipVersionUpgrade
