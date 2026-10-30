@@ -19,7 +19,8 @@ const AuthView = () => {
         <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-orange-300/20 blur-3xl" />
         <div className="absolute top-[42%] -left-36 h-80 w-80 rounded-full bg-orange-200/20 blur-3xl" />
         <div className="absolute -bottom-36 right-[8%] h-80 w-80 rounded-full bg-orange-400/10 blur-3xl" />
-        <div className={`absolute top-0 left-0 h-full w-full ${isDarkMode ? 'bg-[#17191d]/70' : 'bg-[#f4f1ed]/70'}`} />
+        {/* [MODIFIED] Dark backdrop follows the Deep Dark palette. */}
+        <div className={`absolute top-0 left-0 h-full w-full ${isDarkMode ? 'bg-[#101318]/85' : 'bg-[#f4f1ed]/70'}`} />
       </div>
 
       {/* [ADDED] Theme control. */}
@@ -50,8 +51,8 @@ const AuthView = () => {
             </p>
           </div>
 
-          {/* [MODIFIED] Clean neumorphic authentication card. */}
-          <div className={`rounded-[30px] border ${isDarkMode ? 'border-white/[0.06]' : 'border-white/80'} ${theme.bgContainer} p-5 sm:p-7 shadow-[12px_12px_30px_rgba(0,0,0,0.07),-10px_-10px_28px_rgba(255,255,255,0.72)] transition-colors duration-500`}>
+          {/* [MODIFIED] Card shadow adapts to Deep Dark without changing its layout. */}
+          <div className={`rounded-[30px] border ${isDarkMode ? 'border-white/[0.06] shadow-[14px_14px_30px_rgba(0,0,0,0.38),-7px_-7px_22px_rgba(47,57,69,0.22)]' : 'border-white/80 shadow-[12px_12px_30px_rgba(0,0,0,0.07),-10px_-10px_28px_rgba(255,255,255,0.72)]'} ${theme.bgContainer} p-5 sm:p-7 transition-colors duration-500`}>
             <div className="mb-6">
               <h2 className={`text-[22px] font-extrabold tracking-tight ${theme.textPrimary}`}>
                 {isLogin ? 'Masuk ke AIDO' : 'Buat Akun AIDO'}
@@ -68,54 +69,19 @@ const AuthView = () => {
                 <>
                   <div className="relative">
                     <span className={iconWrapClass}><Icons.User size={17} /></span>
-                    <input
-                      type="text"
-                      autoComplete="given-name"
-                      placeholder="Nama Depan"
-                      value={authForm.firstName}
-                      onChange={setAuthField('firstName')}
-                      required
-                      className={fieldClass}
-                    />
+                    <input type="text" autoComplete="given-name" placeholder="Nama Depan" value={authForm.firstName} onChange={setAuthField('firstName')} required className={fieldClass} />
                   </div>
-
                   <div className="relative">
                     <span className={iconWrapClass}><Icons.User size={17} /></span>
-                    <input
-                      type="text"
-                      autoComplete="family-name"
-                      placeholder="Nama Belakang"
-                      value={authForm.lastName}
-                      onChange={setAuthField('lastName')}
-                      required
-                      className={fieldClass}
-                    />
+                    <input type="text" autoComplete="family-name" placeholder="Nama Belakang" value={authForm.lastName} onChange={setAuthField('lastName')} required className={fieldClass} />
                   </div>
-
                   <div className="relative">
                     <span className={iconWrapClass}><Icons.Store size={17} /></span>
-                    <input
-                      type="text"
-                      autoComplete="organization"
-                      placeholder="Nama Toko (opsional)"
-                      value={authForm.storeName}
-                      onChange={setAuthField('storeName')}
-                      className={fieldClass}
-                    />
+                    <input type="text" autoComplete="organization" placeholder="Nama Toko (opsional)" value={authForm.storeName} onChange={setAuthField('storeName')} className={fieldClass} />
                   </div>
-
                   <div className="relative">
                     <span className={iconWrapClass}><Icons.Mail size={17} /></span>
-                    <input
-                      type="email"
-                      autoComplete="email"
-                      autoCapitalize="none"
-                      placeholder="Email"
-                      value={authForm.email}
-                      onChange={setAuthField('email')}
-                      required
-                      className={fieldClass}
-                    />
+                    <input type="email" autoComplete="email" autoCapitalize="none" placeholder="Email" value={authForm.email} onChange={setAuthField('email')} required className={fieldClass} />
                   </div>
                 </>
               )}
@@ -123,16 +89,7 @@ const AuthView = () => {
               {isLogin && (
                 <div className="relative">
                   <span className={iconWrapClass}><Icons.Mail size={17} /></span>
-                  <input
-                    type="text"
-                    autoComplete="username"
-                    autoCapitalize="none"
-                    placeholder="Email atau Username"
-                    value={authForm.identifier}
-                    onChange={setAuthField('identifier')}
-                    required
-                    className={fieldClass}
-                  />
+                  <input type="text" autoComplete="username" autoCapitalize="none" placeholder="Email atau Username" value={authForm.identifier} onChange={setAuthField('identifier')} required className={fieldClass} />
                 </div>
               )}
 
@@ -149,12 +106,7 @@ const AuthView = () => {
                   onChange={setAuthField('password')}
                   className={`${fieldClass} pr-12`}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
-                  className={`absolute right-0 top-0 h-[50px] w-11 flex items-center justify-center ${theme.textSecondary} hover:text-[#f26b32] transition-colors`}
-                >
+                <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'} className={`absolute right-0 top-0 h-[50px] w-11 flex items-center justify-center ${theme.textSecondary} hover:text-[#f26b32] transition-colors`}>
                   {showPassword ? <Icons.EyeOff size={17} /> : <Icons.Eye size={17} />}
                 </button>
               </div>
@@ -173,10 +125,7 @@ const AuthView = () => {
                 </div>
               )}
 
-              <button
-                type="submit"
-                className="mt-2 flex h-[54px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#ff873f] to-[#f0441e] text-sm font-bold text-white shadow-[0_9px_18px_rgba(239,83,39,0.24)] transition-all hover:brightness-105 active:scale-[0.985]"
-              >
+              <button type="submit" className="mt-2 flex h-[54px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#ff873f] to-[#f0441e] text-sm font-bold text-white shadow-[0_9px_18px_rgba(239,83,39,0.24)] transition-all hover:brightness-105 active:scale-[0.985]">
                 {isLogin ? 'Masuk' : 'Daftar Sekarang'}
                 <Icons.ChevronRight size={18} />
               </button>
@@ -184,11 +133,7 @@ const AuthView = () => {
               {/* [MODIFIED] Account mode switch remains connected to the existing auth flow. */}
               <p className={`pt-3 text-center text-xs ${theme.textSecondary}`}>
                 {isLogin ? 'Belum punya akun?' : 'Sudah punya akun?'}{' '}
-                <button
-                  type="button"
-                  onClick={switchAuthMode}
-                  className="font-bold text-[#ed5b2b] hover:underline"
-                >
+                <button type="button" onClick={switchAuthMode} className="font-bold text-[#ed5b2b] hover:underline">
                   {isLogin ? 'Daftar sekarang' : 'Masuk di sini'}
                 </button>
               </p>
