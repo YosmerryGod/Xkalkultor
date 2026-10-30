@@ -18,6 +18,8 @@ const CalculatorView = () => {
 
   // [ADDED] Mengatur input mana yang sedang aktif.
   const [activeInput, setActiveInput] = useState(null);
+  // [ADDED] Custom picker replaces Android's native select popup.
+  const [activePicker, setActivePicker] = useState(null);
 
   // Rincian kalkulasi tertutup secara default; tutup lagi tiap hasil berubah.
   const [showDetail, setShowDetail] = useState(false);
@@ -96,35 +98,16 @@ const CalculatorView = () => {
                 } rounded-2xl text-xs font-semibold ${inputBaseClass}`}
               />
 
-              {/* Dropdown dipindahkan ke dalam input nama menu. */}
+              {/* [MODIFIED] Open the app-styled saved-menu picker instead of native select. */}
               {sortedMenus.length > 0 && (
-                <div className="absolute inset-y-0 right-0 flex items-center">
-                  <select
-                    aria-label="Pilih menu tersimpan"
-                    value={selectedMenuId}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        selectMenuItem(e.target.value);
-                      }
-                    }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  >
-                    <option value="">Pilih menu tersimpan</option>
-
-                    {sortedMenus.map((menu) => (
-                      <option key={menu.id} value={menu.id}>
-                        {menu.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <span className="pointer-events-none pr-3 flex items-center text-gray-400">
-                    <Icons.ChevronRight
-                      size={13}
-                      className="rotate-90"
-                    />
-                  </span>
-                </div>
+                <button
+                  type="button"
+                  aria-label="Pilih menu tersimpan"
+                  onClick={() => setActivePicker('menu')}
+                  className="absolute inset-y-0 right-0 flex items-center justify-center px-3 text-gray-400"
+                >
+                  <Icons.ChevronRight size={13} className="rotate-90" />
+                </button>
               )}
             </div>
           </div>
@@ -175,34 +158,21 @@ const CalculatorView = () => {
               Platform Merchant
             </label>
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            {/* [MODIFIED] Theme-aware marketplace picker trigger. */}
+            <button
+              id="calculator-merchant"
+              type="button"
+              onClick={() => setActivePicker('merchant')}
+              className={`relative w-full h-12 pl-9 pr-8 rounded-2xl text-left ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-xs font-semibold cursor-pointer transition-all active:scale-[0.99]`}
+            >
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                 <Icons.Store size={14} />
-              </div>
-
-              <select
-                id="calculator-merchant"
-                name="merchant"
-                value={calcData.merchant || 'shopeefood'}
-                onChange={handleCalcChange}
-                className={`w-full h-12 pl-9 pr-8 rounded-2xl appearance-none ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-xs font-semibold cursor-pointer`}
-              >
-                {Object.entries(calcSettings?.marketplaces || {}).map(
-                  ([key, data]) => (
-                    <option key={key} value={key}>
-                      {data?.name || key}
-                    </option>
-                  )
-                )}
-              </select>
-
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                <Icons.ChevronRight
-                  size={14}
-                  className="rotate-90"
-                />
-              </div>
-            </div>
+              </span>
+              {calcSettings?.marketplaces?.[calcData.merchant || 'shopeefood']?.name || 'Pilih marketplace'}
+              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                <Icons.ChevronRight size={14} className="rotate-90" />
+              </span>
+            </button>
           </div>
 
           <button
@@ -316,6 +286,110 @@ const CalculatorView = () => {
           </div>
         )}
       </div>
+
+      {/* [ADDED] Custom bottom sheet for marketplace and saved-menu selection. */}
+      {activePicker && (
+        <div
+          className="fixed inset-0 z-[300] flex items-end justify-center"
+          role="presentation"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setActivePicker(null); }}
+        >
+          <div className="absolute inset-0 bg-black/55 backdrop-blur-[3px] animate-[pickerFadeIn_180ms_ease-out]" />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label={activePicker === 'merchant' ? 'Pilih marketplace' : 'Pilih menu tersimpan'}
+            className={`relative z-10 mb-3 mx-3 w-full max-w-lg overflow-hidden rounded-[28px] p-3 ${theme.bgContainer} ${theme.shadowOut} animate-[pickerSlideUp_240ms_cubic-bezier(0.22,1,0.36,1)]`}
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-gray-400/40" />
+            <div className="px-3 pb-3">
+              <h3 className={`text-sm font-extrabold tracking-tight ${theme.textPrimary}`}>
+                {activePicker === 'merchant' ? 'Pilih Marketplace' : 'Pilih Menu'}
+              </h3>
+              <p className={`mt-1 text-[11px] ${theme.textSecondary}`}>
+                {activePicker === 'merchant' ? 'Pilih platform untuk perhitungan harga.' : 'Gunakan menu yang sudah tersimpan.'}
+              </p>
+            </div>
+            <div className="max-h-[48vh] overflow-y-auto custom-scrollbar space-y-1">
+              {activePicker === 'merchant' ? (
+                Object.entries(calcSettings?.marketplaces || {}).map(([key, data]) => {
+                  const selected = (calcData.merchant || 'shopeefood') === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        handleCalcChange({ target: { name: 'merchant', value: key } });
+                        setActivePicker(null);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all active:scale-[0.99] ${selected ? 'bg-[#df6a49]/10 ring-1 ring-[#df6a49]/30' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+                    >
+                      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${theme.bgContainer} ${theme.shadowIn} ${selected ? 'text-[#df6a49]' : theme.textSecondary}`}>
+                        <Icons.Store size={17} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className={`block text-sm font-bold ${theme.textPrimary}`}>{data?.name || key}</span>
+                        <span className={`mt-0.5 block text-[10px] ${theme.textSecondary}`}>Platform merchant</span>
+                      </span>
+                      <span className={`flex h-5 w-5 items-center justify-center rounded-full border ${selected ? 'border-[#df6a49] bg-[#df6a49]' : 'border-gray-400/50'}`}>
+                        {selected && <Icons.Check size={12} className="text-white" />}
+                      </span>
+                    </button>
+                  );
+                })
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setActivePicker(null)}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all ${!selectedMenuId ? 'bg-[#df6a49]/10 ring-1 ring-[#df6a49]/30' : ''}`}
+                  >
+                    <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${theme.bgContainer} ${theme.shadowIn} ${theme.textSecondary}`}>
+                      <Icons.Plus size={17} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className={`block text-sm font-bold ${theme.textPrimary}`}>Input manual</span>
+                      <span className={`mt-0.5 block text-[10px] ${theme.textSecondary}`}>Tetap gunakan nama dan harga yang diketik</span>
+                    </span>
+                    {!selectedMenuId && <Icons.Check size={17} className="text-[#df6a49]" />}
+                  </button>
+                  {sortedMenus.map((menu) => {
+                    const selected = selectedMenuId === String(menu.id);
+                    return (
+                      <button
+                        key={menu.id}
+                        type="button"
+                        onClick={() => { selectMenuItem(menu.id); setActivePicker(null); }}
+                        className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all active:scale-[0.99] ${selected ? 'bg-[#df6a49]/10 ring-1 ring-[#df6a49]/30' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+                      >
+                        <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${theme.bgContainer} ${theme.shadowIn} ${selected ? 'text-[#df6a49]' : theme.textSecondary}`}>
+                          <Icons.Tag size={17} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className={`block truncate text-sm font-bold ${theme.textPrimary}`}>{menu.name}</span>
+                          <span className={`mt-0.5 block text-[10px] ${theme.textSecondary}`}>Rp {Number(menu.hargaNet || 0).toLocaleString('id-ID')}</span>
+                        </span>
+                        {selected && <Icons.Check size={17} className="text-[#df6a49]" />}
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setActivePicker(null)}
+              className={`mt-2 h-11 w-full rounded-2xl text-xs font-bold ${theme.bgContainer} ${theme.shadowOut} ${theme.textSecondary} active:scale-[0.99] transition-all`}
+            >
+              Tutup
+            </button>
+          </section>
+          <style>{`
+            @keyframes pickerFadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes pickerSlideUp { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+          `}</style>
+        </div>
+      )}
 
       <SettingsSheet />
     </div>
