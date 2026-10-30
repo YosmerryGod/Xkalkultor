@@ -1,4 +1,4 @@
-# Exkalt — Kalkulator Harga Jual
+# Xkalkultor — Kalkulator Harga Jual
 
 Aplikasi kalkulator harga jual mobile-first untuk ShopeeFood, GrabFood, dan GoFood. Dibangun dengan Next.js App Router, React, Tailwind CSS, dan Neon PostgreSQL.
 
