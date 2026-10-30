@@ -1,5 +1,6 @@
 import { useApp } from '../../context/AppContext';
 import { Icons } from '../../components/icons/Icons';
+import DownloadApk from '../../components/DownloadApk';
 
 // [MODIFIED] Redesigned AIDO authentication UI while preserving the existing auth API and state flow.
 const AuthView = () => {
@@ -50,6 +51,8 @@ const AuthView = () => {
               bisnis lebih untung.
             </p>
           </div>
+
+          <DownloadApk />
 
           {/* [MODIFIED] Card shadow adapts to Deep Dark without changing its layout. */}
           <div className={`rounded-[30px] border ${isDarkMode ? 'border-white/[0.06] shadow-[14px_14px_30px_rgba(0,0,0,0.38),-7px_-7px_22px_rgba(47,57,69,0.22)]' : 'border-white/80 shadow-[12px_12px_30px_rgba(0,0,0,0.07),-10px_-10px_28px_rgba(255,255,255,0.72)]'} ${theme.bgContainer} p-5 sm:p-7 transition-colors duration-500`}>
