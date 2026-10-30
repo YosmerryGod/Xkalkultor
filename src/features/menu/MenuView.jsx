@@ -7,8 +7,8 @@ const EMPTY_FORM = { id: null, name: '', hargaNet: '', image: '' };
 // [ADDED] Buat kategori dari frasa yang berulang dan kombinasi bahan pada nama menu.
 const normalizeWords = (value) => String(value || '')
   .toLocaleLowerCase('id-ID')
-  .replace(/[^a-z0-9\\s+]/g, ' ')
-  .split(/\\s+/)
+  .replace(/[^a-z0-9\s+]/g, ' ')
+  .split(/\s+/)
   .filter(Boolean);
 
 const getMenuTags = (menuName, allMenus) => {
@@ -26,7 +26,7 @@ const getMenuTags = (menuName, allMenus) => {
       }
       return false;
     }).length;
-    if (count >= 2) tags.add(phrase.replace(/\\b\\w/g, (letter) => letter.toUpperCase()));
+    if (count >= 2) tags.add(phrase.replace(/\b\w/g, (letter) => letter.toUpperCase()));
   }
 
   // [ADDED] Kategori turunan untuk paket dan kombinasi menu.
@@ -40,7 +40,7 @@ const getMenuTags = (menuName, allMenus) => {
   if (tags.size === 0 && words.length > 0) {
     const ignored = new Set(['paket', 'kenyang', 'dengan', 'plus', 'dan']);
     const core = words.filter((word) => !ignored.has(word)).slice(0, 2).join(' ');
-    if (core) tags.add(core.replace(/\\b\\w/g, (letter) => letter.toUpperCase()));
+    if (core) tags.add(core.replace(/\b\w/g, (letter) => letter.toUpperCase()));
   }
 
   return [...tags];
