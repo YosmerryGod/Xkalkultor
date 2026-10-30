@@ -69,7 +69,7 @@ const ProfilePanel = () => {
                 {initials}
               </div>
               <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#171D24] bg-[#F07845] text-white">
-                <Icons.Camera size={13} />
+                <Icons.Edit size={13} />
               </span>
             </div>
             <div className="min-w-0 flex-1">
