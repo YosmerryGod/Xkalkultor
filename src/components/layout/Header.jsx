@@ -46,7 +46,11 @@ const Header = () => {
         {/* [ADDED] Theme toggle sits immediately to the left of the profile button. */}
         <button
           type="button"
-          onClick={() => setIsDarkMode(!isDarkMode)}
+          onClick={() => {
+            // [ADDED] Enable smooth color transitions before switching the theme.
+            document.documentElement.classList.add('theme-transition');
+            setIsDarkMode(!isDarkMode);
+          }}
           aria-label={isDarkMode ? 'Aktifkan light mode' : 'Aktifkan dark mode'}
           aria-pressed={isDarkMode}
           title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
