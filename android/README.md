@@ -1,10 +1,11 @@
-# Xkalkultor Android APK (Trusted Web Activity)
+# AYDO Android APK (Trusted Web Activity)
 
 This folder is the workspace for the Android Trusted Web Activity generated with Bubblewrap.
 
 ## App identity
 
-- App name: Xkalkultor
+- App name: AYDO – Kalkulator Merchant
+- Android launcher name: AYDO
 - Android package ID: `com.xkalkultor.app`
 - Production origin: `https://ex-kalkulator.vercel.app`
 - Web manifest: `https://ex-kalkulator.vercel.app/manifest.webmanifest`
@@ -31,7 +32,8 @@ npx @bubblewrap/cli@latest init --manifest=https://ex-kalkulator.vercel.app/mani
 During the interactive setup, confirm these values:
 
 - Package ID: `com.xkalkultor.app`
-- App name / launcher name: `Xkalkultor`
+- App name: `AYDO – Kalkulator Merchant`
+- Launcher name: `AYDO`
 - Host: `ex-kalkulator.vercel.app`
 - Start URL: `/`
 - Display: `standalone`
