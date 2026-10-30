@@ -233,7 +233,8 @@ export const AppProvider = ({ children }) => {
   });
 
   // [MODIFIED] Simpan kategori dan cegah nama menu duplikat tanpa membedakan kapitalisasi.
-  const saveMenuItem = ({ id, name, hargaNet, category }) => {
+  // [MODIFIED] Simpan foto menu bersama nama, kategori, dan harga.
+  const saveMenuItem = ({ id, name, hargaNet, category, image }) => {
     const n = String(name || '').trim();
     const normalizedName = n.toLocaleLowerCase('id-ID');
     const price = parseNum(hargaNet, 0);
@@ -249,8 +250,8 @@ export const AppProvider = ({ children }) => {
       return false;
     }
     setMenuItems((prev) => (id
-      ? (prev || []).map((m) => (String(m.id) === String(id) ? { ...m, name: n, hargaNet: price, category: normalizedCategory } : m))
-      : [...(prev || []), { id: Date.now(), name: n, hargaNet: price, category: normalizedCategory }]));
+      ? (prev || []).map((m) => (String(m.id) === String(id) ? { ...m, name: n, hargaNet: price, category: normalizedCategory, image: image || '' } : m))
+      : [...(prev || []), { id: Date.now(), name: n, hargaNet: price, category: normalizedCategory, image: image || '' }]));
     showToast(id ? 'Menu diperbarui.' : 'Menu ditambahkan.', 'success');
     return true;
   };
