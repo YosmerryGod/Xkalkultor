@@ -99,3 +99,11 @@ CREATE TABLE IF NOT EXISTS home_content (
 
 CREATE INDEX IF NOT EXISTS idx_home_content_type_order
   ON home_content(content_type, sort_order);
+
+-- [ADDED] Full frontend state snapshot, scoped to the authenticated account.
+-- This keeps existing calculator/history structures available for normalized reporting.
+CREATE TABLE IF NOT EXISTS user_app_data (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
