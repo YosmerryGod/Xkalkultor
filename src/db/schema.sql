@@ -107,3 +107,10 @@ CREATE TABLE IF NOT EXISTS user_app_data (
   payload JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- [ADDED] Shared home-page content controlled by admin accounts.
+CREATE TABLE IF NOT EXISTS global_app_data (
+  id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
