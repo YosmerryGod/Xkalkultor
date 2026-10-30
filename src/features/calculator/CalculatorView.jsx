@@ -18,6 +18,8 @@ const CalculatorView = () => {
 
   // [ADDED] Mengatur input mana yang sedang aktif.
   const [activeInput, setActiveInput] = useState(null);
+  // [ADDED] Controls the custom marketplace and saved-menu pickers.
+  const [activePicker, setActivePicker] = useState(null);
 
   // Rincian kalkulasi tertutup secara default; tutup lagi tiap hasil berubah.
   const [showDetail, setShowDetail] = useState(false);
@@ -96,34 +98,45 @@ const CalculatorView = () => {
                 } rounded-2xl text-xs font-semibold ${inputBaseClass}`}
               />
 
-              {/* Dropdown dipindahkan ke dalam input nama menu. */}
+              {/* [MODIFIED] Open saved menus in a themed dropdown directly below the name input. */}
               {sortedMenus.length > 0 && (
-                <div className="absolute inset-y-0 right-0 flex items-center">
-                  <select
-                    aria-label="Pilih menu tersimpan"
-                    value={selectedMenuId}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        selectMenuItem(e.target.value);
-                      }
-                    }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  >
-                    <option value="">Pilih menu tersimpan</option>
-
-                    {sortedMenus.map((menu) => (
-                      <option key={menu.id} value={menu.id}>
-                        {menu.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <span className="pointer-events-none pr-3 flex items-center text-gray-400">
-                    <Icons.ChevronRight
-                      size={13}
-                      className="rotate-90"
-                    />
-                  </span>
+                <button
+                  type="button"
+                  aria-label="Pilih menu tersimpan"
+                  onClick={() => setActivePicker(activePicker === 'menu' ? null : 'menu')}
+                  className="absolute inset-y-0 right-0 flex items-center justify-center px-3 text-gray-400"
+                >
+                  <Icons.ChevronRight size={13} className="rotate-90" />
+                </button>
+              )}
+              {activePicker === 'menu' && (
+                <div className={`absolute left-0 right-0 top-full mt-2 z-50 rounded-2xl p-2 ${theme.bgContainer} ${theme.shadowOut} border border-gray-400/10 animate-[pickerDropIn_180ms_ease-out]`}>
+                  <div className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>Menu tersimpan</div>
+                  <div className="max-h-52 overflow-y-auto">
+                    {sortedMenus.map((menu) => {
+                      const selected = selectedMenuId === String(menu.id);
+                      return (
+                        <button
+                          key={menu.id}
+                          type="button"
+                          onClick={() => {
+                            selectMenuItem(menu.id);
+                            setActivePicker(null);
+                          }}
+                          className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors ${selected ? 'bg-[#df6a49]/10' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+                        >
+                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${theme.shadowIn} ${selected ? 'text-[#df6a49]' : theme.textSecondary}`}>
+                            <Icons.Tag size={15} />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className={`block truncate text-xs font-bold ${theme.textPrimary}`}>{menu.name}</span>
+                            <span className={`mt-0.5 block text-[10px] ${theme.textSecondary}`}>Rp {Number(menu.hargaNet || 0).toLocaleString('id-ID')}</span>
+                          </span>
+                          {selected && <span className="text-sm font-black text-[#df6a49]">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -175,34 +188,21 @@ const CalculatorView = () => {
               Platform Merchant
             </label>
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            {/* [MODIFIED] Marketplace picker opens centered on the screen. */}
+            <button
+              id="calculator-merchant"
+              type="button"
+              onClick={() => setActivePicker('merchant')}
+              className={`relative w-full h-12 pl-9 pr-8 rounded-2xl text-left ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-xs font-semibold cursor-pointer transition-all active:scale-[0.99]`}
+            >
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                 <Icons.Store size={14} />
-              </div>
-
-              <select
-                id="calculator-merchant"
-                name="merchant"
-                value={calcData.merchant || 'shopeefood'}
-                onChange={handleCalcChange}
-                className={`w-full h-12 pl-9 pr-8 rounded-2xl appearance-none ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-xs font-semibold cursor-pointer`}
-              >
-                {Object.entries(calcSettings?.marketplaces || {}).map(
-                  ([key, data]) => (
-                    <option key={key} value={key}>
-                      {data?.name || key}
-                    </option>
-                  )
-                )}
-              </select>
-
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                <Icons.ChevronRight
-                  size={14}
-                  className="rotate-90"
-                />
-              </div>
-            </div>
+              </span>
+              {calcSettings?.marketplaces?.[calcData.merchant || 'shopeefood']?.name || 'Pilih marketplace'}
+              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                <Icons.ChevronRight size={14} className="rotate-90" />
+              </span>
+            </button>
           </div>
 
           <button
@@ -316,6 +316,61 @@ const CalculatorView = () => {
           </div>
         )}
       </div>
+
+      {/* [ADDED] Centered marketplace picker overlay. */}
+      {activePicker === 'merchant' && (
+        <div
+          className="fixed inset-0 z-[300] flex items-center justify-center p-5"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setActivePicker(null); }}
+        >
+          <div className="absolute inset-0 bg-black/55 backdrop-blur-[3px] animate-[pickerFadeIn_180ms_ease-out]" />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label="Pilih marketplace"
+            className={`relative z-10 w-full max-w-sm overflow-hidden rounded-[26px] p-3 ${theme.bgContainer} ${theme.shadowOut} animate-[pickerCenterIn_220ms_cubic-bezier(0.22,1,0.36,1)]`}
+          >
+            <div className="px-3 py-2">
+              <h3 className={`text-sm font-extrabold ${theme.textPrimary}`}>Pilih Marketplace</h3>
+              <p className={`mt-1 text-[11px] ${theme.textSecondary}`}>Pilih platform untuk perhitungan harga.</p>
+            </div>
+            <div className="mt-2 space-y-1">
+              {Object.entries(calcSettings?.marketplaces || {}).map(([key, data]) => {
+                const selected = (calcData.merchant || 'shopeefood') === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      handleCalcChange({ target: { name: 'merchant', value: key } });
+                      setActivePicker(null);
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all ${selected ? 'bg-[#df6a49]/10 ring-1 ring-[#df6a49]/30' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+                  >
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${theme.shadowIn} ${selected ? 'text-[#df6a49]' : theme.textSecondary}`}>
+                      <Icons.Store size={16} />
+                    </span>
+                    <span className={`flex-1 text-sm font-bold ${theme.textPrimary}`}>{data?.name || key}</span>
+                    {selected && <span className="text-sm font-black text-[#df6a49]">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => setActivePicker(null)}
+              className={`mt-2 h-10 w-full rounded-xl text-xs font-bold ${theme.shadowIn} ${theme.textSecondary}`}
+            >
+              Tutup
+            </button>
+          </section>
+          <style>{`
+            @keyframes pickerFadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes pickerCenterIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes pickerDropIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+          `}</style>
+        </div>
+      )}
 
       <SettingsSheet />
     </div>
