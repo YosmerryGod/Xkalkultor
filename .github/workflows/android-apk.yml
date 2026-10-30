@@ -1,0 +1,86 @@
+name: Build AYDO Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build test APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build components
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install Bubblewrap
+        run: npm install --global @bubblewrap/cli@1.27.0
+
+      - name: Generate Android project
+        working-directory: android
+        run: bubblewrap update --skipVersionUpgrade
+
+      - name: Build unsigned TWA APK
+        working-directory: android
+        run: bubblewrap build --skipSigning --skipPwaValidation
+
+      - name: Sign test APK
+        working-directory: android
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK_PATH="$(find . -type f -name '*.apk' ! -name '*aligned*' | head -n 1)"
+          if [ -z "$APK_PATH" ]; then
+            echo "Bubblewrap did not produce an APK."
+            find . -maxdepth 4 -type f -print
+            exit 1
+          fi
+
+          keytool -genkeypair -v \
+            -keystore "$RUNNER_TEMP/aydo-test.keystore" \
+            -storepass android \
+            -keypass android \
+            -alias aydo-test \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=AYDO Test, OU=Development, O=AYDO, L=Banjarmasin, ST=South Kalimantan, C=ID"
+
+          zipalign -f -v 4 "$APK_PATH" "$RUNNER_TEMP/aydo-test-aligned.apk"
+          apksigner sign \
+            --ks "$RUNNER_TEMP/aydo-test.keystore" \
+            --ks-key-alias aydo-test \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out "$RUNNER_TEMP/AYDO-test.apk" \
+            "$RUNNER_TEMP/aydo-test-aligned.apk"
+          apksigner verify --verbose "$RUNNER_TEMP/AYDO-test.apk"
+
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AYDO-test-APK
+          path: ${{ runner.temp }}/AYDO-test.apk
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,25 @@
+{
+  "packageId": "com.xkalkultor.app",
+  "host": "ex-kalkulator.vercel.app",
+  "name": "AYDO – Kalkulator Merchant",
+  "launcherName": "AYDO",
+  "display": "standalone",
+  "orientation": "portrait",
+  "startUrl": "/",
+  "iconUrl": "https://ex-kalkulator.vercel.app/icons/icon-512.png",
+  "maskableIconUrl": "https://ex-kalkulator.vercel.app/icons/icon-maskable-512.png",
+  "themeColor": "#e37151",
+  "themeColorDark": "#e37151",
+  "navigationColor": "#ffffff",
+  "navigationColorDark": "#ffffff",
+  "backgroundColor": "#ffffff",
+  "enableNotifications": false,
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "android.keystore",
+    "alias": "aydo"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "webManifestUrl": "https://ex-kalkulator.vercel.app/manifest.webmanifest"
+}
