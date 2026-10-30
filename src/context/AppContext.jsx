@@ -45,6 +45,15 @@ export const AppProvider = ({ children }) => {
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => LS.get(KEYS.dark, false));
+  // [ADDED] Daily free-plan calculation usage, stored per account and local calendar day.
+  const getLocalUsageDate = () => { const now = new Date(); return [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-'); };
+  const [dailyUsage, setDailyUsage] = useState({ date: getLocalUsageDate(), count: 0 });
+  useEffect(() => {
+    if (!userProfile?.id) { setDailyUsage({ date: getLocalUsageDate(), count: 0 }); return; }
+    const date = getLocalUsageDate();
+    const saved = LS.get('aido_daily_usage_' + userProfile.id, { date, count: 0 });
+    setDailyUsage(saved?.date === date ? saved : { date, count: 0 });
+  }, [userProfile?.id]);
 
   // Kalkulator Core States
   const [calcData, setCalcData] = useState(() => emptyCalcData(getInitialUserData()?.calcSettings || DEFAULT_SETTINGS));
@@ -347,6 +356,13 @@ const handleCalculate = () => {
 
   setCalcResult({ finalPricePerItem, breakdown });
 
+  // [ADDED] Save successful calculations to the account's daily usage counter.
+  if (!hasUnlimitedCalculations) {
+    const nextUsage = { date: usageDate, count: currentUsage + 1 };
+    setDailyUsage(nextUsage);
+    LS.set('aido_daily_usage_' + userProfile.id, nextUsage);
+  }
+
   const ts = new Date().toLocaleString('id-ID', {
     day: '2-digit',
     month: 'short',
@@ -523,7 +539,7 @@ const handleCalculate = () => {
   const value = {
     isLogin, setIsLogin, showPassword, setShowPassword, currentView, setCurrentView,
     activeTab, setActiveTab, userProfile, setUserProfile, authForm, setAuthForm,
-    authError, setAuthError, showProfileMenu, setShowProfileMenu, isDarkMode, setIsDarkMode,
+    authError, setAuthError, showProfileMenu, setShowProfileMenu, isDarkMode, setIsDarkMode, dailyUsage,
     calcData, setCalcData, calcResult, setCalcResult, showSettings, setShowSettings,
     historyLog, setHistoryLog, searchQuery, setSearchQuery, showSearchModal, setShowSearchModal,
     sortOrder, setSortOrder, merchantFilter, setMerchantFilter, showFilterMenu, setShowFilterMenu,
