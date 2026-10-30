@@ -135,7 +135,7 @@ const ProfilePanel = () => {
         onClick={() => setShowProfileMenu(false)}
         className="absolute inset-0 bg-black/55 backdrop-blur-[3px]"
       />
-      <section className={`relative flex h-full w-[75vw] max-w-[520px] min-w-[280px] flex-col overflow-hidden border-l ${isDarkMode ? 'border-[#2A333E] bg-[#141A21]' : 'border-white bg-[#e8edf3]'} shadow-[-18px_0_55px_rgba(0,0,0,0.30)] animate-in slide-in-from-right duration-300`}>
+      <section className={`relative flex h-full w-[75vw] max-w-[520px] flex-col overflow-hidden border-l ${isDarkMode ? 'border-[#2A333E] bg-[#141A21]' : 'border-white bg-[#e8edf3]'} shadow-[-18px_0_55px_rgba(0,0,0,0.30)] animate-in slide-in-from-right duration-300`}>
         <div className="flex items-center justify-between px-5 pb-3 pt-[max(1.25rem,env(safe-area-inset-top))]">
           <div>
             <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#F07845]">Akun Saya</p>
