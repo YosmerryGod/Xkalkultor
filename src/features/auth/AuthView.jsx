@@ -35,7 +35,7 @@ const AuthView = () => {
             <input type="email" autoComplete="email" autoCapitalize="none" placeholder="Email" value={authForm.email} onChange={setAuthField('email')} className={`w-full h-11 px-4 rounded-2xl ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-xs transition-all`} />
           )}
           <div className="flex gap-2 relative">
-            <input type={showPassword ? "text" : "password"} autoComplete={isLogin ? 'current-password' : 'new-password'} placeholder="Password" value={authForm.password} onChange={setAuthField('password')} className={`w-full h-11 px-4 rounded-2xl ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-xs transition-all`} />
+            <input type={showPassword ? "text" : "password"} autoComplete={isLogin ? 'current-password' : 'new-password'} minLength={isLogin ? undefined : 8} maxLength={128} required placeholder="Password" value={authForm.password} onChange={setAuthField('password')} className={`w-full h-11 px-4 rounded-2xl ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-xs transition-all`} />
             <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Tampilkan password" className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-2xl ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} ${theme.textSecondary} transition-all`}>
               {showPassword ? <Icons.EyeOff size={15} /> : <Icons.Eye size={15} />}
             </button>
