@@ -2,10 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { KEYS } from '../constants/storageKeys';
 import { getTheme } from '../constants/theme';
 import { DEFAULT_SETTINGS, DEFAULT_BANNERS, DEFAULT_HOME_PROMOS, EMPTY_AUTH_FORM, EMPTY_PROMO_FORM, EMPTY_HOME_ITEM } from '../constants/defaults';
-import {
-  getInitialSession, getInitialUserData, loadUserData, saveUserData,
-  saveSession, clearSession, toProfile, login, register,
-} from '../services/authService';
+import { toProfile } from '../services/authService';
 import { LS } from '../utils/storage';
 import { parseNum } from '../utils/format';
 import { calculatePrice } from '../utils/calculatePrice';
@@ -56,12 +53,12 @@ export const AppProvider = ({ children }) => {
   }, [userProfile?.id]);
 
   // Kalkulator Core States
-  const [calcData, setCalcData] = useState(() => emptyCalcData(getInitialUserData()?.calcSettings || DEFAULT_SETTINGS));
+  const [calcData, setCalcData] = useState(() => emptyCalcData(DEFAULT_SETTINGS));
   const [calcResult, setCalcResult] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
   // History & Filter States
-  const [historyLog, setHistoryLog] = useState(() => getInitialUserData()?.historyLog || []);
+  const [historyLog, setHistoryLog] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [sortOrder, setSortOrder] = useState('newest');
@@ -70,7 +67,7 @@ export const AppProvider = ({ children }) => {
   const [coretFilter, setCoretFilter] = useState('all'); // 'all' | 'coret' | 'nocoret'
 
   // Daftar menu tersimpan (nama + harga net), per akun
-  const [menuItems, setMenuItems] = useState(() => getInitialUserData()?.menuItems || []);
+  const [menuItems, setMenuItems] = useState([]);
 
   // Add Promo States (Single & Multi Package)
   const [isAddingPromo, setIsAddingPromo] = useState(false);
@@ -79,7 +76,7 @@ export const AppProvider = ({ children }) => {
   const [promoForm, setPromoForm] = useState(EMPTY_PROMO_FORM);
   const [editingPromoId, setEditingPromoId] = useState(null); // null = sedang membuat promo baru
 
-  const [calcSettings, setCalcSettings] = useState(() => getInitialUserData()?.calcSettings || DEFAULT_SETTINGS);
+  const [calcSettings, setCalcSettings] = useState(DEFAULT_SETTINGS);
 
   const [banners, setBanners] = useState(() => LS.get(KEYS.banners, DEFAULT_BANNERS));
   const [homePromos, setHomePromos] = useState(() => upgradeHomePromos(LS.get(KEYS.homePromos, DEFAULT_HOME_PROMOS)));
@@ -87,7 +84,7 @@ export const AppProvider = ({ children }) => {
   // [ADDED] Restore the authenticated profile from the secure server session.
   useEffect(() => {
     let active = true;
-    fetch('/api/auth/me', { credentials: 'same-origin' })
+    fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' })
       .then(async (response) => {
         const result = await response.json();
         if (!response.ok || !result.user) return null;
@@ -113,8 +110,14 @@ export const AppProvider = ({ children }) => {
       return () => { active = false; };
     }
 
+    // [ADDED] Clear the previous account's in-memory data before loading this account.
+    setCalcSettings(DEFAULT_SETTINGS);
+    setHistoryLog([]);
+    setMenuItems([]);
+    setCalcData(emptyCalcData(DEFAULT_SETTINGS));
+    setCalcResult(null);
     setCloudDataReady(false);
-    fetch('/api/user/data', { credentials: 'same-origin' })
+    fetch('/api/user/data', { credentials: 'same-origin', cache: 'no-store' })
       .then(async (response) => {
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.error || 'Gagal memuat data akun.');
@@ -141,6 +144,7 @@ export const AppProvider = ({ children }) => {
     const timer = setTimeout(() => {
       fetch('/api/user/data', {
         method: 'PUT',
+        cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({ data: { calcSettings, historyLog, menuItems } }),
@@ -198,10 +202,6 @@ export const AppProvider = ({ children }) => {
   useEffect(() => { LS.set(KEYS.dark, isDarkMode); }, [isDarkMode]);
   useEffect(() => { LS.set(KEYS.banners, banners); }, [banners]);
   useEffect(() => { LS.set(KEYS.homePromos, homePromos); }, [homePromos]);
-  useEffect(() => {
-    if (userProfile) saveUserData(userProfile.id, { calcSettings, historyLog, menuItems });
-  }, [calcSettings, historyLog, menuItems, userProfile]);
-
   const [showAddHomeModal, setShowAddHomeModal] = useState(false);
   const [homeAddType, setHomeAddType] = useState('promo');
   const [newHomeItem, setNewHomeItem] = useState(EMPTY_HOME_ITEM);
@@ -435,11 +435,12 @@ const handleCalculate = () => {
   };
 
   const startSession = (user) => {
-    const data = loadUserData(user.id);
-    setCalcSettings(data?.calcSettings || DEFAULT_SETTINGS);
-    setHistoryLog(data?.historyLog || []);
-    setMenuItems(data?.menuItems || []);
-    setCalcData(emptyCalcData(data?.calcSettings || DEFAULT_SETTINGS));
+    // [MODIFIED] Do not restore account data from browser storage; PostgreSQL is the source of truth.
+    setCloudDataReady(false);
+    setCalcSettings(DEFAULT_SETTINGS);
+    setHistoryLog([]);
+    setMenuItems([]);
+    setCalcData(emptyCalcData(DEFAULT_SETTINGS));
     setCalcResult(null);
     setUserProfile(toProfile(user));
     // [MODIFIED] The server owns the session; do not store an auth ID in localStorage.
@@ -454,7 +455,7 @@ const handleCalculate = () => {
     // [MODIFIED] Revoke the server-side session before clearing local UI state.
     try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }); }
     catch (error) { console.error('[Auth] Logout request failed:', error); }
-    clearSession();
+    // [MODIFIED] The server session is revoked by the logout API; no local auth session is used.
     setShowProfileMenu(false);
     setShowSettings(false);
     setUserProfile(null);
