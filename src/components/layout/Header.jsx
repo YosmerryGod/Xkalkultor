@@ -7,7 +7,7 @@ import ProfilePanel from './ProfilePanel';
 const Header = () => {
   const {
     activeTab, userProfile, showProfileMenu, setShowProfileMenu, isDarkMode,
-    setShowSearchModal, theme,
+    setIsDarkMode, setShowSearchModal, theme,
   } = useApp();
 
   const fullName = [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(' ');
@@ -42,6 +42,18 @@ const Header = () => {
             <Icons.Search size={18} />
           </button>
         )}
+
+        {/* [ADDED] Theme toggle sits immediately to the left of the profile button. */}
+        <button
+          type="button"
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          aria-label={isDarkMode ? 'Aktifkan light mode' : 'Aktifkan dark mode'}
+          aria-pressed={isDarkMode}
+          title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+          className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all ${isDarkMode ? 'border-[#39424D] bg-[#202832] text-[#F5B18B]' : 'border-white bg-[#e9edf2] text-[#bd5a36]'} ${theme.shadowOut}`}
+        >
+          {isDarkMode ? <Icons.Sun size={17} /> : <Icons.Moon size={17} />}
+        </button>
 
         <button
           type="button"
