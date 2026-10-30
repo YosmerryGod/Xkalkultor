@@ -1,9 +1,9 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Exkalt — Kalkulator Harga Jual',
+  title: 'Xkalkultor — Kalkulator Harga Jual', // [MODIFIED] Nama aplikasi Android dan metadata browser.
   description: 'Kalkulator harga jual ShopeeFood, GrabFood, dan GoFood',
-  applicationName: 'Exkalt',
+  applicationName: 'Xkalkultor', // [MODIFIED] Identitas aplikasi.
   manifest: '/manifest.webmanifest',
   formatDetection: { telephone: false },
   icons: {
@@ -15,7 +15,7 @@ export const metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: 'Exkalt',
+    title: 'Xkalkultor', // [MODIFIED] Nama aplikasi saat ditambahkan ke layar utama.
     statusBarStyle: 'default',
   },
   other: { 'mobile-web-app-capable': 'yes' },
