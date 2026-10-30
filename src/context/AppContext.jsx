@@ -224,8 +224,11 @@ export const AppProvider = ({ children }) => {
 
   // ---- Menu tersimpan
   // [MODIFIED] Kelompokkan menu berdasarkan kategori, lalu urutkan nama di setiap kategori.
+  const menuCategoryOrder = ['Makanan', 'Minuman', 'Snack', 'Paket', 'Lainnya'];
   const sortedMenus = [...(menuItems || [])].sort((a, b) => {
-    const categoryCompare = String(a.category || 'Lainnya').localeCompare(String(b.category || 'Lainnya'), 'id');
+    const categoryA = menuCategoryOrder.indexOf(a.category || 'Lainnya');
+    const categoryB = menuCategoryOrder.indexOf(b.category || 'Lainnya');
+    const categoryCompare = (categoryA < 0 ? menuCategoryOrder.length : categoryA) - (categoryB < 0 ? menuCategoryOrder.length : categoryB);
     return categoryCompare || String(a.name).localeCompare(String(b.name), 'id');
   });
 
