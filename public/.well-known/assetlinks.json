@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.xkalkultor.app",
+      "sha256_cert_fingerprints": [
+        "AE:87:F5:8F:FC:C2:E0:EB:2B:2E:74:06:5B:DD:3B:83:ED:6E:13:FF:06:10:60:28:88:3C:B4:7A:D6:D1:39:9E"
+      ]
+    }
+  }
+]
