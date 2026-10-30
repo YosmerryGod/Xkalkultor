@@ -36,6 +36,8 @@ export const AppProvider = ({ children }) => {
   const [activeTab, setActiveTab] = useState('beranda');
   const [userProfile, setUserProfile] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+  // [ADDED] Prevent autosave until the server snapshot has been loaded.
+  const [cloudDataReady, setCloudDataReady] = useState(false);
   const [authForm, setAuthForm] = useState(EMPTY_AUTH_FORM);
   const [authError, setAuthError] = useState('');
 
@@ -91,6 +93,54 @@ export const AppProvider = ({ children }) => {
       .finally(() => { if (active) setAuthReady(true); });
     return () => { active = false; };
   }, []);
+
+  // [ADDED] Load the account's calculator data from PostgreSQL after session restoration/login.
+  useEffect(() => {
+    let active = true;
+    if (!userProfile?.id) {
+      setCloudDataReady(false);
+      return () => { active = false; };
+    }
+
+    setCloudDataReady(false);
+    fetch('/api/user/data', { credentials: 'same-origin' })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Gagal memuat data akun.');
+        return result.data;
+      })
+      .then((data) => {
+        if (!active || !data) return;
+        setCalcSettings(data.calcSettings || DEFAULT_SETTINGS);
+        setHistoryLog(Array.isArray(data.historyLog) ? data.historyLog : []);
+        setMenuItems(Array.isArray(data.menuItems) ? data.menuItems : []);
+      })
+      .catch((error) => console.error('[Cloud Data] Load failed:', error))
+      .finally(() => { if (active) setCloudDataReady(true); });
+
+    return () => { active = false; };
+  }, [userProfile?.id]);
+
+  // [ADDED] Persist user-owned calculator data to PostgreSQL after changes settle.
+  useEffect(() => {
+    if (!userProfile?.id || !cloudDataReady) return undefined;
+    const timer = setTimeout(() => {
+      fetch('/api/user/data', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ data: { calcSettings, historyLog, menuItems } }),
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            throw new Error(result.error || 'Gagal menyimpan data.');
+          }
+        })
+        .catch((error) => console.error('[Cloud Data] Save failed:', error));
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [calcSettings, historyLog, menuItems, userProfile?.id, cloudDataReady]);
 
   // Simpan otomatis ke penyimpanan browser
   useEffect(() => { LS.set(KEYS.dark, isDarkMode); }, [isDarkMode]);
