@@ -17,6 +17,12 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- [ADDED] Google identity used to link verified Google accounts to existing users.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_sub TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub
+  ON users(google_sub)
+  WHERE google_sub IS NOT NULL;
+
 -- [ADDED] Hashed opaque session tokens; raw tokens are never stored.
 CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

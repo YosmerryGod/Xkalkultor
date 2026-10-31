@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Icons } from '../../components/icons/Icons';
 import DownloadApk from '../../components/DownloadApk';
@@ -9,6 +10,15 @@ const AuthView = () => {
     theme, setAuthField, switchAuthMode, handleAuthSubmit,
     isDarkMode, setIsDarkMode,
   } = useApp();
+
+  // [ADDED] Show a helpful message when Google OAuth returns an error.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'google_error') {
+      setAuthError('Login Google gagal. Silakan coba lagi atau gunakan email dan password.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [setAuthError]);
 
   const fieldClass = `w-full h-[50px] pl-12 pr-4 rounded-2xl ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-[13px] font-medium transition-all placeholder:font-normal placeholder:text-gray-400`;
   const iconWrapClass = `absolute left-0 top-0 h-[50px] w-11 flex items-center justify-center rounded-l-2xl ${theme.textSecondary}`;
@@ -132,6 +142,21 @@ const AuthView = () => {
                 {isLogin ? 'Masuk' : 'Daftar Sekarang'}
                 <Icons.ChevronRight size={18} />
               </button>
+
+              {/* [ADDED] Google OAuth uses the same server-side account and session system. */}
+              <div className="pt-4">
+                <div className="relative mb-4 flex items-center justify-center">
+                  <div className={`h-px w-full ${isDarkMode ? 'bg-white/10' : 'bg-black/10'}`} />
+                  <span className={`absolute px-3 text-[10px] font-semibold uppercase tracking-wider ${theme.bgContainer} ${theme.textSecondary}`}>atau</span>
+                </div>
+                <a
+                  href="/api/auth/google"
+                  className={`flex h-[52px] w-full items-center justify-center gap-3 rounded-2xl border text-[13px] font-bold transition-all active:scale-[0.985] ${isDarkMode ? 'border-white/10 bg-white/[0.04] text-[#F1F3F5] hover:bg-white/[0.08]' : 'border-black/10 bg-white/70 text-gray-700 hover:bg-white'}`}
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-base font-black leading-none text-[#4285F4] shadow-sm">G</span>
+                  {isLogin ? 'Lanjutkan dengan Google' : 'Daftar dengan Google'}
+                </a>
+              </div>
 
               {/* [MODIFIED] Account mode switch remains connected to the existing auth flow. */}
               <p className={`pt-3 text-center text-xs ${theme.textSecondary}`}>

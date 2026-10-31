@@ -23,7 +23,17 @@ Tambahkan environment variable berikut di Vercel (**Settings → Environment Var
 
 ```env
 POSTGRES_URL=postgresql://...
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
 ```
+
+Google OAuth:
+1. Buat OAuth 2.0 Client ID bertipe Web application di Google Cloud Console.
+2. Tambahkan Authorized redirect URI: `https://ex-kalkulator.vercel.app/api/auth/google/callback`.
+3. Untuk lokal, tambahkan juga `http://localhost:5173/api/auth/google/callback`.
+4. Simpan Client ID dan Client Secret sebagai environment variables di Vercel dan `.env.local`, lalu redeploy.
+
+Jangan pernah commit Client Secret ke repository.
 
 Gunakan connection string Neon dari dashboard. Jangan pernah memasukkan connection string ke kode frontend, commit ke Git, atau membagikannya di chat.
 
@@ -68,6 +78,8 @@ Script tidak mengubah akun yang sudah ada. Simpan kredensial admin dengan aman.
 | GET | `/api/health` | Memeriksa koneksi API dan database |
 | POST | `/api/auth/register` | Mendaftarkan akun |
 | POST | `/api/auth/login` | Login dan membuat session |
+| GET | `/api/auth/google` | Memulai Google OAuth |
+| GET | `/api/auth/google/callback` | Callback Google OAuth dan membuat session |
 | GET | `/api/auth/me` | Memeriksa session aktif |
 | POST | `/api/auth/logout` | Mencabut session |
 | GET | `/api/user/data` | Mengambil data kalkulator akun |
