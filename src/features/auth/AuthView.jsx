@@ -1,3 +1,4 @@
+// [MODIFIED] Password visibility identifiers must remain valid JavaScript names.
 import { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Icons } from '../../components/icons/Icons';
