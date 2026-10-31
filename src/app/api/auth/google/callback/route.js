@@ -149,7 +149,7 @@ export async function GET(request) {
             username, email, password_hash, first_name, last_name, store_name, google_sub
           )
           VALUES (
-            ${email}, ${email}, ${passwordHash}, ${firstName}, ${lastName},
+            ${'google_' + claims.sub}, ${email}, ${passwordHash}, ${firstName}, ${lastName},
             ${'Toko ' + firstName}, ${claims.sub}
           )
           RETURNING id, username, email, first_name, last_name, store_name, role
