@@ -304,11 +304,13 @@ const AuthView = () => {
 
               {/* [MODIFIED] Google remains a plain server-side OAuth link. */}
               <div className="pt-3">
-                <div className="relative mb-4 flex items-center">
-                  <div className={`h-px w-full ${isDarkMode ? 'bg-white/10' : 'bg-[#9ba3ad]/35'}`} />
-                  <span className={`absolute left-1/2 -translate-x-1/2 px-3 text-[10px] font-bold uppercase tracking-[.18em] ${theme.bgContainer} ${theme.textSecondary}`}>
-                    Atau lanjutkan dengan
+                {/* [MODIFIED] Compact, single-line divider for a cleaner Google sign-in section. */}
+                <div className="mb-4 flex items-center gap-3">
+                  <div className={`h-px flex-1 ${isDarkMode ? 'bg-white/10' : 'bg-[#9ba3ad]/35'}`} />
+                  <span className={`whitespace-nowrap text-[9px] font-extrabold uppercase tracking-[.2em] ${theme.textSecondary}`}>
+                    ATAU
                   </span>
+                  <div className={`h-px flex-1 ${isDarkMode ? 'bg-white/10' : 'bg-[#9ba3ad]/35'}`} />
                 </div>
                 <a
                   href="/api/auth/google"
