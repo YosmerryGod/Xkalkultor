@@ -20,8 +20,9 @@ const AuthView = () => {
     }
   }, [setAuthError]);
 
-  const fieldClass = `w-full h-[50px] pl-12 pr-4 rounded-2xl ${theme.inputBg} ${theme.textPrimary} ${theme.shadowIn} focus:outline-none ${theme.inputFocus} text-[13px] font-medium transition-all placeholder:font-normal placeholder:text-gray-400`;
-  const iconWrapClass = `absolute left-0 top-0 h-[50px] w-11 flex items-center justify-center rounded-l-2xl ${theme.textSecondary}`;
+  // [MODIFIED] Use consistent, accessible form controls with clear focus states.
+  const fieldClass = `w-full h-[52px] pl-12 pr-4 rounded-xl border ${isDarkMode ? 'border-white/10 bg-[#13181E] text-[#F1F3F5] placeholder:text-gray-500' : 'border-gray-200 bg-white text-gray-800 placeholder:text-gray-400'} focus:outline-none focus:ring-2 focus:ring-[#ed6a3a]/30 focus:border-[#ed6a3a] text-[14px] font-medium transition-all`;
+  const iconWrapClass = `absolute left-0 top-0 h-[52px] w-11 flex items-center justify-center rounded-l-xl ${theme.textSecondary}`;
 
   return (
     <div className={`relative isolate w-full h-full overflow-y-auto custom-scrollbar ${theme.bgContainer} transition-colors duration-500`}>
@@ -55,17 +56,14 @@ const AuthView = () => {
             <p className={`mt-2 text-[13px] sm:text-sm font-semibold tracking-[0.12em] ${theme.textSecondary}`}>
               Kalkulator Merchant
             </p>
-            <p className={`mt-4 text-sm leading-relaxed ${theme.textSecondary}`}>
-              Hitung lebih mudah,
-              <br />
-              bisnis lebih untung.
-            </p>
+            {/* [REMOVED] Removed the requested promotional tagline. */}
           </div>
 
           <DownloadApk />
 
           {/* [MODIFIED] Card shadow adapts to Deep Dark without changing its layout. */}
-          <div className={`rounded-[30px] border ${isDarkMode ? 'border-white/[0.06] shadow-[14px_14px_30px_rgba(0,0,0,0.38),-7px_-7px_22px_rgba(47,57,69,0.22)]' : 'border-white/80 shadow-[12px_12px_30px_rgba(0,0,0,0.07),-10px_-10px_28px_rgba(255,255,255,0.72)]'} ${theme.bgContainer} p-5 sm:p-7 transition-colors duration-500`}>
+          {/* [MODIFIED] Professional authentication card with restrained border and elevation. */}
+          <div className={`rounded-[26px] border ${isDarkMode ? 'border-white/10 bg-[#181D24] shadow-[0_18px_50px_rgba(0,0,0,0.28)]' : 'border-gray-200/80 bg-white shadow-[0_18px_50px_rgba(31,41,55,0.09)]'} p-5 sm:p-7 transition-colors duration-500`}>
             <div className="mb-6">
               <h2 className={`text-[22px] font-extrabold tracking-tight ${theme.textPrimary}`}>
                 {isLogin ? 'Masuk ke AIDO' : 'Buat Akun AIDO'}
@@ -151,10 +149,16 @@ const AuthView = () => {
                 </div>
                 <a
                   href="/api/auth/google"
-                  className={`flex h-[52px] w-full items-center justify-center gap-3 rounded-2xl border text-[13px] font-bold transition-all active:scale-[0.985] ${isDarkMode ? 'border-white/10 bg-white/[0.04] text-[#F1F3F5] hover:bg-white/[0.08]' : 'border-black/10 bg-white/70 text-gray-700 hover:bg-white'}`}
+                  aria-label={isLogin ? 'Lanjutkan dengan Google' : 'Daftar dengan Google'}
+                  className={`flex h-[54px] w-full items-center justify-center gap-3 rounded-xl border text-[14px] font-semibold transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-[#4285F4]/30 focus:ring-offset-2 ${isDarkMode ? 'border-white/15 bg-[#202630] text-[#F1F3F5] hover:bg-[#28313d] focus:ring-offset-[#181D24]' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-offset-white'}`}
                 >
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-base font-black leading-none text-[#4285F4] shadow-sm">G</span>
-                  {isLogin ? 'Lanjutkan dengan Google' : 'Daftar dengan Google'}
+                  <svg aria-hidden="true" viewBox="0 0 48 48" className="h-[20px] w-[20px]" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.76 7.18l7.73 6C44.42 37.96 46.98 31.86 46.98 24.55Z" />
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.8l-7.73-6c-2.14 1.45-4.89 2.3-8.18 2.3-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z" />
+                    <path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.19a23.9 23.9 0 0 0 0 21.56l7.98-6.19Z" />
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z" />
+                  </svg>
+                  <span>{isLogin ? 'Lanjutkan dengan Google' : 'Daftar dengan Google'}</span>
                 </a>
               </div>
 
