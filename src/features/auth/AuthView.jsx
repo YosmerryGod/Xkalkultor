@@ -27,7 +27,7 @@ const AuthView = () => {
   return (
     <div className={`relative isolate w-full h-full overflow-y-auto custom-scrollbar ${theme.bgContainer} transition-colors duration-500`}>
       {/* [MODIFIED] Premium animated liquid background with soft, slow-moving slime forms. */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className={`auth-liquid auth-liquid-one ${isDarkMode ? 'auth-liquid-dark' : 'auth-liquid-light'}`} />
         <div className={`auth-liquid auth-liquid-two ${isDarkMode ? 'auth-liquid-dark' : 'auth-liquid-light'}`} />
         <div className={`auth-liquid auth-liquid-three ${isDarkMode ? 'auth-liquid-dark' : 'auth-liquid-light'}`} />
@@ -112,7 +112,7 @@ const AuthView = () => {
         {isDarkMode ? <Icons.Sun size={17} /> : <Icons.Moon size={17} />}
       </button>
 
-      <div className="min-h-full w-full flex items-center justify-center px-4 py-12 sm:px-8">
+      <div className="relative z-10 min-h-full w-full flex items-center justify-center px-4 py-12 sm:px-8">
         <div className="w-full max-w-[440px]">
           {/* [MODIFIED] Text-only brand header. */}
           <div className="text-center mb-8 sm:mb-9">
