@@ -7,8 +7,8 @@ import DownloadApk from '../../components/DownloadApk';
 const AuthView = () => {
   const {
     isLogin,
-    showPassword,
-    setShowPassword,
+    showKata sandi,
+    setShowKata sandi,
     authForm,
     authError,
     setAuthError,
@@ -27,7 +27,7 @@ const AuthView = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('auth') === 'google_error') {
-      setAuthError('Google sign-in failed. Please try again or use your email and password.');
+      setAuthError('Login Google gagal. Silakan coba lagi atau gunakan email dan kata sandi.');
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [setAuthError]);
@@ -132,7 +132,7 @@ const AuthView = () => {
       <button
         type="button"
         onClick={() => setIsDarkMode(!isDarkMode)}
-        aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+        aria-label={isDarkMode ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'}
         className={`absolute right-5 top-5 z-30 flex h-11 w-11 items-center justify-center rounded-full ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} ${theme.textSecondary} transition-transform active:scale-95`}
       >
         {isDarkMode ? <Icons.Sun size={18} /> : <Icons.Moon size={18} />}
@@ -160,15 +160,15 @@ const AuthView = () => {
 
             <div className="mb-6">
               <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[.2em] text-[#ed5b2b]">
-                {isLogin ? 'Welcome back' : 'Get started'}
+                {isLogin ? 'Selamat datang kembali' : 'Mulai sekarang'}
               </p>
               <h2 className={`text-[25px] font-extrabold tracking-tight ${theme.textPrimary}`}>
-                {isLogin ? 'Sign in to AIDO' : 'Create your account'}
+                {isLogin ? 'Masuk ke AIDO' : 'Buat akun Anda'}
               </h2>
               <p className={`mt-1.5 text-[13px] leading-relaxed ${theme.textSecondary}`}>
                 {isLogin
-                  ? 'Your business tools are just one step away.'
-                  : 'Set up your account and simplify your pricing.'}
+                  ? 'Akses alat bantu bisnis Anda hanya satu langkah lagi.'
+                  : 'Buat akun dan permudah perhitungan harga.'}
               </p>
             </div>
 
@@ -181,8 +181,8 @@ const AuthView = () => {
                       <input
                         type="text"
                         autoComplete="given-name"
-                        placeholder="First name"
-                        aria-label="First name"
+                        placeholder="Nama depan"
+                        aria-label="Nama depan"
                         value={authForm.firstName}
                         onChange={setAuthField('firstName')}
                         required
@@ -194,8 +194,8 @@ const AuthView = () => {
                       <input
                         type="text"
                         autoComplete="family-name"
-                        placeholder="Last name"
-                        aria-label="Last name"
+                        placeholder="Nama belakang"
+                        aria-label="Nama belakang"
                         value={authForm.lastName}
                         onChange={setAuthField('lastName')}
                         required
@@ -207,8 +207,8 @@ const AuthView = () => {
                       <input
                         type="text"
                         autoComplete="organization"
-                        placeholder="Store name (optional)"
-                        aria-label="Store name (optional)"
+                        placeholder="Nama toko (opsional)"
+                        aria-label="Nama toko (opsional)"
                         value={authForm.storeName}
                         onChange={setAuthField('storeName')}
                         className={fieldClass}
@@ -220,8 +220,8 @@ const AuthView = () => {
                         type="email"
                         autoComplete="email"
                         autoCapitalize="none"
-                        placeholder="Email address"
-                        aria-label="Email address"
+                        placeholder="Alamat email"
+                        aria-label="Alamat email"
                         value={authForm.email}
                         onChange={setAuthField('email')}
                         required
@@ -238,8 +238,8 @@ const AuthView = () => {
                       type="text"
                       autoComplete="username"
                       autoCapitalize="none"
-                      placeholder="Email or username"
-                      aria-label="Email or username"
+                      placeholder="Email atau nama pengguna"
+                      aria-label="Email atau nama pengguna"
                       value={authForm.identifier}
                       onChange={setAuthField('identifier')}
                       required
@@ -252,24 +252,24 @@ const AuthView = () => {
               <div className="relative auth-mode-panel">
                 <span className={iconWrapClass}><Icons.Lock size={17} /></span>
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showKata sandi ? 'text' : 'password'}
                   autoComplete={isLogin ? 'current-password' : 'new-password'}
                   minLength={isLogin ? undefined : 8}
                   maxLength={128}
                   required
-                  placeholder="Password"
-                  aria-label="Password"
+                  placeholder="Kata sandi"
+                  aria-label="Kata sandi"
                   value={authForm.password}
                   onChange={setAuthField('password')}
                   className={`${fieldClass} pr-12`}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowKata sandi(!showKata sandi)}
+                  aria-label={showKata sandi ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
                   className={`absolute right-0 top-0 flex h-[54px] w-12 items-center justify-center rounded-r-2xl ${theme.textSecondary} transition-colors hover:text-[#f26b32]`}
                 >
-                  {showPassword ? <Icons.EyeOff size={17} /> : <Icons.Eye size={17} />}
+                  {showKata sandi ? <Icons.EyeOff size={17} /> : <Icons.Eye size={17} />}
                 </button>
               </div>
 
@@ -291,11 +291,11 @@ const AuthView = () => {
                 {isSubmitting ? (
                   <>
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" />
-                    <span>{isLogin ? 'Signing in...' : 'Creating account...'}</span>
+                    <span>{isLogin ? 'Sedang masuk...' : 'Sedang membuat akun...'}</span>
                   </>
                 ) : (
                   <>
-                    <span>{isLogin ? 'Sign in' : 'Create account'}</span>
+                    <span>{isLogin ? 'Masuk' : 'Buat akun'}</span>
                     <Icons.ChevronRight size={18} />
                   </>
                 )}
@@ -306,12 +306,12 @@ const AuthView = () => {
                 <div className="relative mb-4 flex items-center">
                   <div className={`h-px w-full ${isDarkMode ? 'bg-white/10' : 'bg-[#9ba3ad]/35'}`} />
                   <span className={`absolute left-1/2 -translate-x-1/2 px-3 text-[10px] font-bold uppercase tracking-[.18em] ${theme.bgContainer} ${theme.textSecondary}`}>
-                    Or continue with
+                    Atau lanjutkan dengan
                   </span>
                 </div>
                 <a
                   href="/api/auth/google"
-                  aria-label={isLogin ? 'Continue with Google' : 'Sign up with Google'}
+                  aria-label="Google"
                   className={`flex h-[54px] w-full items-center justify-center gap-3 rounded-2xl border-0 text-[13px] font-bold transition-transform active:scale-[.985] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4]/50 ${theme.bgContainer} ${theme.shadowOut} ${theme.shadowOutActive} ${theme.textPrimary}`}
                 >
                   <svg aria-hidden="true" viewBox="0 0 48 48" className="h-[19px] w-[19px]" xmlns="http://www.w3.org/2000/svg">
@@ -320,25 +320,25 @@ const AuthView = () => {
                     <path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.19a23.9 23.9 0 0 0 0 21.56l7.98-6.19Z" />
                     <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z" />
                   </svg>
-                  <span>{isLogin ? 'Continue with Google' : 'Sign up with Google'}</span>
+                  <span>Google</span>
                 </a>
               </div>
 
               <p className={`pt-3 text-center text-[12px] ${theme.textSecondary}`}>
-                {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+                {isLogin ? "Belum punya akun?" : 'Sudah punya akun?'}{' '}
                 <button
                   type="button"
                   onClick={switchAuthMode}
                   className="font-extrabold text-[#ed5b2b] transition-colors hover:text-[#f26b32] hover:underline"
                 >
-                  {isLogin ? 'Create one' : 'Sign in'}
+                  {isLogin ? 'Daftar' : 'Masuk'}
                 </button>
               </p>
             </form>
           </section>
 
           <p className={`mt-6 text-center text-[10px] font-semibold tracking-[.12em] ${theme.textSecondary} opacity-70`}>
-            AIDO · MERCHANT PRICE CALCULATOR
+            AIDO · KALKULATOR HARGA MERCHANT
           </p>
         </main>
       </div>
