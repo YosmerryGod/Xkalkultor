@@ -26,14 +26,81 @@ const AuthView = () => {
 
   return (
     <div className={`relative isolate w-full h-full overflow-y-auto custom-scrollbar ${theme.bgContainer} transition-colors duration-500`}>
-      {/* [ADDED] Subtle decorative background shapes, without a logo or mascot. */}
+      {/* [MODIFIED] Premium animated liquid background with soft, slow-moving slime forms. */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-orange-300/20 blur-3xl" />
-        <div className="absolute top-[42%] -left-36 h-80 w-80 rounded-full bg-orange-200/20 blur-3xl" />
-        <div className="absolute -bottom-36 right-[8%] h-80 w-80 rounded-full bg-orange-400/10 blur-3xl" />
-        {/* [MODIFIED] Dark backdrop follows the Deep Dark palette. */}
-        <div className={`absolute top-0 left-0 h-full w-full ${isDarkMode ? 'bg-[#101318]/85' : 'bg-[#f4f1ed]/70'}`} />
+        <div className={`auth-liquid auth-liquid-one ${isDarkMode ? 'auth-liquid-dark' : 'auth-liquid-light'}`} />
+        <div className={`auth-liquid auth-liquid-two ${isDarkMode ? 'auth-liquid-dark' : 'auth-liquid-light'}`} />
+        <div className={`auth-liquid auth-liquid-three ${isDarkMode ? 'auth-liquid-dark' : 'auth-liquid-light'}`} />
+        <div className={`absolute inset-0 ${isDarkMode ? 'bg-[#101318]/75' : 'bg-[#f4f1ed]/75'}`} />
+        <div className={`absolute inset-0 ${isDarkMode ? 'auth-grain-dark' : 'auth-grain-light'}`} />
       </div>
+
+      {/* [ADDED] Scoped liquid motion and reduced-motion accessibility. */}
+      <style jsx>{`
+        .auth-liquid {
+          position: absolute;
+          width: min(58vw, 560px);
+          height: min(58vw, 560px);
+          min-width: 280px;
+          min-height: 280px;
+          border-radius: 42% 58% 65% 35% / 45% 38% 62% 55%;
+          filter: blur(34px);
+          opacity: 0.72;
+          will-change: transform, border-radius;
+          animation: auth-liquid-morph 18s ease-in-out infinite alternate,
+                     auth-liquid-float 24s ease-in-out infinite;
+        }
+        .auth-liquid-one {
+          top: -18%;
+          right: -12%;
+          background: linear-gradient(135deg, #ff9b62 0%, #ef633e 48%, #d94d76 100%);
+        }
+        .auth-liquid-two {
+          left: -17%;
+          bottom: -22%;
+          width: min(52vw, 500px);
+          height: min(52vw, 500px);
+          background: linear-gradient(145deg, #f6a56f 0%, #e56c53 52%, #9e78b9 100%);
+          animation-delay: -7s, -11s;
+          animation-duration: 22s, 29s;
+        }
+        .auth-liquid-three {
+          top: 38%;
+          left: 42%;
+          width: min(34vw, 330px);
+          height: min(34vw, 330px);
+          min-width: 190px;
+          min-height: 190px;
+          background: linear-gradient(145deg, #f5b77c 0%, #e86d76 55%, #8f8bd1 100%);
+          opacity: 0.42;
+          animation-delay: -12s, -5s;
+          animation-duration: 25s, 32s;
+        }
+        .auth-liquid-dark { opacity: 0.38; filter: blur(58px) saturate(115%); }
+        .auth-liquid-light { opacity: 0.48; filter: blur(54px) saturate(90%); }
+        .auth-grain-dark {
+          opacity: 0.12;
+          background-image: radial-gradient(rgba(255,255,255,.22) .55px, transparent .55px);
+          background-size: 5px 5px;
+        }
+        .auth-grain-light {
+          opacity: 0.18;
+          background-image: radial-gradient(rgba(45,35,30,.2) .55px, transparent .55px);
+          background-size: 5px 5px;
+        }
+        @keyframes auth-liquid-morph {
+          0% { border-radius: 42% 58% 65% 35% / 45% 38% 62% 55%; }
+          50% { border-radius: 58% 42% 38% 62% / 55% 62% 38% 45%; }
+          100% { border-radius: 35% 65% 52% 48% / 62% 42% 58% 38%; }
+        }
+        @keyframes auth-liquid-float {
+          0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+          50% { transform: translate3d(5vw, -4vh, 0) rotate(18deg) scale(1.12); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .auth-liquid { animation: none; }
+        }
+      `}</style>
 
       {/* [ADDED] Theme control. */}
       <button
@@ -62,8 +129,9 @@ const AuthView = () => {
           <DownloadApk />
 
           {/* [MODIFIED] Card shadow adapts to Deep Dark without changing its layout. */}
-          {/* [MODIFIED] Professional authentication card with restrained border and elevation. */}
-          <div className={`rounded-[26px] border ${isDarkMode ? 'border-white/10 bg-[#181D24] shadow-[0_18px_50px_rgba(0,0,0,0.28)]' : 'border-gray-200/80 bg-white shadow-[0_18px_50px_rgba(31,41,55,0.09)]'} p-5 sm:p-7 transition-colors duration-500`}>
+          {/* [MODIFIED] Liquid-glass authentication card with a crisp, readable surface. */}
+          <div className={`relative overflow-hidden rounded-[28px] border backdrop-blur-2xl ${isDarkMode ? 'border-white/15 bg-[#181D24]/90 shadow-[0_28px_80px_rgba(0,0,0,0.42)]' : 'border-white/80 bg-white/90 shadow-[0_28px_80px_rgba(83,54,40,0.14)]'} p-5 sm:p-7 transition-colors duration-500`}>
+            <div className={`pointer-events-none absolute inset-x-8 top-0 h-px ${isDarkMode ? 'bg-gradient-to-r from-transparent via-orange-300/60 to-transparent' : 'bg-gradient-to-r from-transparent via-orange-400/70 to-transparent'}`} />
             <div className="mb-6">
               <h2 className={`text-[22px] font-extrabold tracking-tight ${theme.textPrimary}`}>
                 {isLogin ? 'Masuk ke AIDO' : 'Buat Akun AIDO'}
