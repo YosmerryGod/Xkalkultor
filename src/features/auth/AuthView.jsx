@@ -8,7 +8,7 @@ const AuthView = () => {
   const {
     isLogin, showPassword, setShowPassword, authForm, authError,
     theme, setAuthField, switchAuthMode, handleAuthSubmit,
-    isDarkMode, setIsDarkMode,
+    isDarkMode, setIsDarkMode, setAuthError, // [ADDED] Expose the auth error setter used by the Google OAuth effect.
   } = useApp();
 
   // [ADDED] Show a helpful message when Google OAuth returns an error.
