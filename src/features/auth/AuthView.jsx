@@ -7,8 +7,8 @@ import DownloadApk from '../../components/DownloadApk';
 const AuthView = () => {
   const {
     isLogin,
-    showKata sandi,
-    setShowKata sandi,
+    showPassword,
+    setShowPassword,
     authForm,
     authError,
     setAuthError,
@@ -252,7 +252,7 @@ const AuthView = () => {
               <div className="relative auth-mode-panel">
                 <span className={iconWrapClass}><Icons.Lock size={17} /></span>
                 <input
-                  type={showKata sandi ? 'text' : 'password'}
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete={isLogin ? 'current-password' : 'new-password'}
                   minLength={isLogin ? undefined : 8}
                   maxLength={128}
@@ -265,11 +265,11 @@ const AuthView = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowKata sandi(!showKata sandi)}
-                  aria-label={showKata sandi ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
                   className={`absolute right-0 top-0 flex h-[54px] w-12 items-center justify-center rounded-r-2xl ${theme.textSecondary} transition-colors hover:text-[#f26b32]`}
                 >
-                  {showKata sandi ? <Icons.EyeOff size={17} /> : <Icons.Eye size={17} />}
+                  {showPassword ? <Icons.EyeOff size={17} /> : <Icons.Eye size={17} />}
                 </button>
               </div>
 
