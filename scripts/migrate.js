@@ -1,13 +1,16 @@
-
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client } = require('pg');
+const { loadEnvConfig } = require('@next/env'); // [ADDED]
+
+// [ADDED] Load environment variables from .env.local
+loadEnvConfig(process.cwd());
 
 async function main() {
   const connectionString =
-  process.env.POSTGRES_URL ||
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL_NON_POOLING;
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL_NON_POOLING;
 
   if (!connectionString) {
     throw new Error('Database URL tidak ditemukan.');
@@ -53,6 +56,7 @@ async function main() {
   }
 }
 
-main().catch(() => {
+main().catch((error) => { // [MODIFIED]
+  console.error('Migration process failed:', error.message); // [ADDED]
   process.exitCode = 1;
 });
